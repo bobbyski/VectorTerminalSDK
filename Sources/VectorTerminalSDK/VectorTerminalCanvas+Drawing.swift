@@ -1,0 +1,399 @@
+import Foundation
+
+/// Immediate-mode VTG drawing commands.
+extension VectorTerminalCanvas {
+    /// Clear all retained VTG primitives from the terminal overlay.
+    public func clear() {
+        send("clear")
+    }
+
+    /// Request presentation of the current VTG scene.
+    public func present() {
+        send("present")
+    }
+
+    /// Set the session default graphics layer for subsequent VTG commands.
+    ///
+    /// Layer 0 is reserved for the future shared text/graphics plane. Layers
+    /// 1-4 currently render as ordered overlay layers, with layer 1 preserving
+    /// the original VectorTerminal behavior.
+    public func setDefaultLayer(_ layer: Int) {
+        guard isSupportedVTGLayer(layer) else {
+            return
+        }
+        send("defaultLayer,value=\(layer)")
+    }
+
+    /// Draw or replace a single pixel.
+    public func pixel(
+        id: String,
+        x: Int,
+        y: Int,
+        color: VTGColor = .white,
+        layer: Int? = nil
+    ) {
+        send("pixel,id=\(id),x=\(x),y=\(y),color=\(color.rawValue)\(layerParameter(layer))")
+    }
+
+    /// Draw or replace a line segment.
+    public func line(
+        id: String,
+        x1: Int,
+        y1: Int,
+        x2: Int,
+        y2: Int,
+        stroke: VTGColor = .white,
+        width: Int = 1,
+        layer: Int? = nil
+    ) {
+        send("line,id=\(id),x1=\(x1),y1=\(y1),x2=\(x2),y2=\(y2),stroke=\(stroke.rawValue),width=\(width)\(layerParameter(layer))")
+    }
+
+    /// Draw or replace a connected polyline from an arbitrary list of points.
+    public func draw(
+        id: String,
+        points: [VTGPoint],
+        stroke: VTGColor = .white,
+        width: Int = 1,
+        layer: Int? = nil
+    ) {
+        guard points.count >= 2 else {
+            return
+        }
+        let payload = points.map { "\($0.x),\($0.y)" }.joined(separator: " ")
+        send("draw,id=\(id),stroke=\(stroke.rawValue),width=\(width)\(layerParameter(layer))", payload: payload)
+    }
+
+    /// Draw or replace a quadratic Bezier curve.
+    public func quadraticCurve(
+        id: String,
+        x1: Int,
+        y1: Int,
+        cx: Int,
+        cy: Int,
+        x2: Int,
+        y2: Int,
+        stroke: VTGColor = .white,
+        width: Int = 1,
+        layer: Int? = nil
+    ) {
+        send("curve,id=\(id),kind=quadratic,x1=\(x1),y1=\(y1),cx=\(cx),cy=\(cy),x2=\(x2),y2=\(y2),stroke=\(stroke.rawValue),width=\(width)\(layerParameter(layer))")
+    }
+
+    /// Draw or replace a cubic Bezier curve.
+    public func cubicCurve(
+        id: String,
+        x1: Int,
+        y1: Int,
+        c1x: Int,
+        c1y: Int,
+        c2x: Int,
+        c2y: Int,
+        x2: Int,
+        y2: Int,
+        stroke: VTGColor = .white,
+        width: Int = 1,
+        layer: Int? = nil
+    ) {
+        send("curve,id=\(id),kind=cubic,x1=\(x1),y1=\(y1),c1x=\(c1x),c1y=\(c1y),c2x=\(c2x),c2y=\(c2y),x2=\(x2),y2=\(y2),stroke=\(stroke.rawValue),width=\(width)\(layerParameter(layer))")
+    }
+
+    /// Draw or replace a triangle.
+    public func triangle(
+        id: String,
+        p1: VTGPoint,
+        p2: VTGPoint,
+        p3: VTGPoint,
+        stroke: VTGColor? = .white,
+        fill: VTGColor? = nil,
+        lineWidth: Int = 1,
+        layer: Int? = nil
+    ) {
+        let strokeValue = stroke?.rawValue ?? "none"
+        let fillValue = fill?.rawValue ?? "none"
+        send("triangle,id=\(id),x1=\(p1.x),y1=\(p1.y),x2=\(p2.x),y2=\(p2.y),x3=\(p3.x),y3=\(p3.y),stroke=\(strokeValue),fill=\(fillValue),width=\(lineWidth)\(layerParameter(layer))")
+    }
+
+    /// Draw or replace a constrained absolute SVG-like path.
+    ///
+    /// Supported commands are `M`, `L`, `Q`, `C`, and `Z`.
+    public func path(
+        id: String,
+        payload: String,
+        stroke: VTGColor? = .white,
+        fill: VTGColor? = nil,
+        lineWidth: Int = 1,
+        layer: Int? = nil
+    ) {
+        let strokeValue = stroke?.rawValue ?? "none"
+        let fillValue = fill?.rawValue ?? "none"
+        send("path,id=\(id),stroke=\(strokeValue),fill=\(fillValue),width=\(lineWidth)\(layerParameter(layer))", payload: sanitizedPayload(payload))
+    }
+
+    /// Draw or replace a rectangle.
+    public func rect(
+        id: String,
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int,
+        stroke: VTGColor? = .white,
+        fill: VTGColor? = nil,
+        lineWidth: Int = 1,
+        layer: Int? = nil
+    ) {
+        let strokeValue = stroke?.rawValue ?? "none"
+        let fillValue = fill?.rawValue ?? "none"
+        send("rect,id=\(id),x=\(x),y=\(y),w=\(width),h=\(height),stroke=\(strokeValue),fill=\(fillValue),width=\(lineWidth)\(layerParameter(layer))")
+    }
+
+    /// Draw or replace a circle.
+    public func circle(
+        id: String,
+        cx: Int,
+        cy: Int,
+        radius: Int,
+        stroke: VTGColor? = .white,
+        fill: VTGColor? = nil,
+        lineWidth: Int = 1,
+        layer: Int? = nil
+    ) {
+        let strokeValue = stroke?.rawValue ?? "none"
+        let fillValue = fill?.rawValue ?? "none"
+        send("circle,id=\(id),cx=\(cx),cy=\(cy),r=\(radius),stroke=\(strokeValue),fill=\(fillValue),width=\(lineWidth)\(layerParameter(layer))")
+    }
+
+    /// Draw or replace an ellipse.
+    public func ellipse(
+        id: String,
+        cx: Int,
+        cy: Int,
+        rx: Int,
+        ry: Int,
+        stroke: VTGColor? = .white,
+        fill: VTGColor? = nil,
+        lineWidth: Int = 1,
+        layer: Int? = nil
+    ) {
+        let strokeValue = stroke?.rawValue ?? "none"
+        let fillValue = fill?.rawValue ?? "none"
+        send("ellipse,id=\(id),cx=\(cx),cy=\(cy),rx=\(rx),ry=\(ry),stroke=\(strokeValue),fill=\(fillValue),width=\(lineWidth)\(layerParameter(layer))")
+    }
+
+    /// Draw or replace host-rendered text in pixel coordinates.
+    public func text(
+        id: String,
+        x: Int,
+        y: Int,
+        value: String,
+        color: VTGColor = .white,
+        size: Int = 14,
+        layer: Int? = nil
+    ) {
+        send("text,id=\(id),x=\(x),y=\(y),color=\(color.rawValue),size=\(size)\(layerParameter(layer))", payload: sanitizedPayload(value))
+    }
+
+    /// Upload and place a retained PNG image.
+    ///
+    /// Direct images remain useful for static raster content. Use sprite
+    /// helpers when an asset needs cheap move/rotate/scale operations.
+    public func image(
+        id: String,
+        x: Int = 0,
+        y: Int = 0,
+        width: Int,
+        height: Int,
+        pngData: Data,
+        layer: Int? = nil
+    ) {
+        send("image,id=\(id),format=png,x=\(x),y=\(y),width=\(width),height=\(height)\(layerParameter(layer))", payload: pngData.base64EncodedString())
+    }
+
+    /// Upload and place a retained JPEG image.
+    public func image(
+        id: String,
+        x: Int = 0,
+        y: Int = 0,
+        width: Int,
+        height: Int,
+        jpegData: Data,
+        layer: Int? = nil
+    ) {
+        send("image,id=\(id),format=jpeg,x=\(x),y=\(y),width=\(width),height=\(height)\(layerParameter(layer))", payload: jpegData.base64EncodedString())
+    }
+
+    /// Upload a PNG sprite image without placing it.
+    ///
+    /// Sprite images are cached by the terminal so callers can move, rotate,
+    /// and scale tiny raster assets without resending the image payload.
+    public func uploadSprite(
+        id: String,
+        width: Int,
+        height: Int,
+        pngData: Data
+    ) {
+        guard isValidVTGIdentifier(id) else {
+            return
+        }
+        send("spriteUpload,id=\(id),format=png,width=\(width),height=\(height)", payload: pngData.base64EncodedString())
+    }
+
+    /// Upload a JPEG sprite image without placing it.
+    public func uploadSprite(
+        id: String,
+        width: Int,
+        height: Int,
+        jpegData: Data
+    ) {
+        guard isValidVTGIdentifier(id) else {
+            return
+        }
+        send("spriteUpload,id=\(id),format=jpeg,width=\(width),height=\(height)", payload: jpegData.base64EncodedString())
+    }
+
+    /// Remove one uploaded sprite asset and any instances using it.
+    public func removeSprite(id: String) {
+        guard isValidVTGIdentifier(id) else {
+            return
+        }
+        send("spriteRemove,id=\(id)")
+    }
+
+    /// Remove all uploaded sprite assets and sprite instances.
+    public func clearSprites() {
+        send("spriteClear")
+    }
+
+    /// Create or replace a retained sprite instance.
+    ///
+    /// `id` is the placed instance id; `imageID` references an uploaded sprite
+    /// asset. Transforms apply to sprite instances only, not arbitrary drawing
+    /// primitives.
+    public func sprite(
+        id: String,
+        imageID: String,
+        x: Int,
+        y: Int,
+        rotation: Double = 0,
+        scale: Double = 1,
+        layer: Int? = nil
+    ) {
+        guard isValidVTGIdentifier(id), isValidVTGIdentifier(imageID) else {
+            return
+        }
+        send("sprite,id=\(id),image=\(imageID),x=\(x),y=\(y),rotation=\(vtgNumber(rotation)),scale=\(vtgNumber(scale))\(layerParameter(layer))")
+    }
+
+    /// Move a retained sprite instance without changing rotation or scale.
+    public func moveSprite(id: String, x: Int, y: Int) {
+        guard isValidVTGIdentifier(id) else {
+            return
+        }
+        send("spriteMove,id=\(id),x=\(x),y=\(y)")
+    }
+
+    /// Rotate a retained sprite instance around its center point.
+    public func rotateSprite(id: String, rotation: Double) {
+        guard isValidVTGIdentifier(id) else {
+            return
+        }
+        send("spriteRotate,id=\(id),rotation=\(vtgNumber(rotation))")
+    }
+
+    /// Update sprite position, rotation, and scale in one frame-loop command.
+    public func transformSprite(
+        id: String,
+        x: Int,
+        y: Int,
+        rotation: Double,
+        scale: Double
+    ) {
+        guard isValidVTGIdentifier(id) else {
+            return
+        }
+        send("spriteTransform,id=\(id),x=\(x),y=\(y),rotation=\(vtgNumber(rotation)),scale=\(vtgNumber(scale))")
+    }
+
+    /// Draw ASCII text using the SDK's vector glyph strokes.
+    ///
+    /// This intentionally uses VTG `draw` segments rather than font rendering
+    /// so demos can prove arbitrary vector primitives are enough for text-like
+    /// output. Non-printing ASCII values render as a box with the numeric code.
+    public func vectorPrint(
+        id: String,
+        x: Int,
+        y: Int,
+        height: Int,
+        value: String,
+        stroke: VTGColor = .white,
+        width: Int = 2,
+        layer: Int? = nil
+    ) {
+        let scale = max(1.0, Double(height) / 7.0)
+        let glyphWidth = Int((5.0 * scale).rounded())
+        let advance = Int((7.0 * scale).rounded())
+        var cursorX = x
+        var glyphIndex = 0
+
+        for scalar in value.unicodeScalars {
+            let ascii = Int(scalar.value)
+            if ascii == 32 {
+                cursorX += advance
+                continue
+            }
+            let strokes = vectorGlyphStrokes(for: ascii)
+            for (strokeIndex, strokePoints) in strokes.enumerated() {
+                let points = strokePoints.map {
+                    VTGPoint(
+                        x: cursorX + Int((Double($0.x) * scale).rounded()),
+                        y: y + Int((Double($0.y) * scale).rounded())
+                    )
+                }
+                draw(id: "\(id)-\(glyphIndex)-\(strokeIndex)", points: points, stroke: stroke, width: width, layer: layer)
+            }
+            if ascii < 32 || ascii == 127 {
+                let code = String(ascii)
+                let smallHeight = max(5, Int(Double(height) * 0.34))
+                vectorPrint(id: "\(id)-code-\(glyphIndex)", x: cursorX + glyphWidth / 5, y: y + height / 3, height: smallHeight, value: code, stroke: stroke, width: max(1, width - 1), layer: layer)
+            }
+            cursorX += advance
+            glyphIndex += 1
+        }
+    }
+
+}
+
+private extension VectorTerminalCanvas {
+    /// VTG ids intentionally stay conservative so apps can embed them directly
+    /// in comma-separated escape parameters without quoting rules.
+    func isValidVTGIdentifier(_ value: String) -> Bool {
+        guard value.isEmpty == false, value.count <= 64 else {
+            return false
+        }
+        return value.allSatisfy { character in
+            character.isASCII && (character.isLetter || character.isNumber)
+        }
+    }
+
+    /// Compact floating-point parameters for transform-heavy sprite commands.
+    func vtgNumber(_ value: Double) -> String {
+        let rounded = value.rounded()
+        if abs(value - rounded) < 0.001 {
+            return String(Int(rounded))
+        }
+        return String(format: "%.3f", value)
+    }
+
+    /// Emit a layer parameter only when the caller asks for a supported layer.
+    func layerParameter(_ layer: Int?) -> String {
+        guard let layer, isSupportedVTGLayer(layer) else {
+            return ""
+        }
+        return ",layer=\(layer)"
+    }
+
+    /// Current prototype supports layer 0 plus four overlay layers.
+    func isSupportedVTGLayer(_ layer: Int) -> Bool {
+        (0...4).contains(layer)
+    }
+}

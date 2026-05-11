@@ -9,18 +9,42 @@ This package is intentionally early. It exists so the project can eventually shi
 - A raw VTG example that shows the protocol directly.
 - An SDK example that shows the friendlier Swift API.
 
+## Requirements
+
+- macOS 16.0 or newer.
+- Swift Package Manager with Swift tools 5.9 or newer.
+
+## Source Layout
+
+The SDK source is split by responsibility so protocol growth does not turn into another monolith:
+
+- `Types.swift`: public color, point, canvas, input, mouse, and event value types.
+- `VectorTerminalCanvas.swift`: core canvas initialization, handshake state, and shared send/write helpers.
+- `VectorTerminalCanvas+Drawing.swift`: VTG drawing primitives, including `draw(...)` and `vectorPrint(...)`.
+- `VectorTerminalCanvas+Queries.swift`: VTG capabilities, canvas, size, resize subscriptions, and terminal cell-size queries.
+- `VectorTerminalCanvas+Events.swift`: synchronous and async keyboard, mouse, resize, and canvas event parsing.
+- `VectorTerminalCanvas+ANSI.swift`: standard ANSI screen, cursor, color, text-attribute, mouse, paste, and focus helpers.
+- `VectorGlyphs.swift`: ASCII-subset vector glyph stroke definitions.
+- `TerminalRawMode.swift`: raw terminal input setup/restore helpers.
+- `DebugEscaping.swift`: readable escape-sequence formatting for diagnostics.
+
 ## Current Implemented Scope
 
 The current Swift implementation wraps:
 
 - VTG `clear`
 - VTG `present`
+- VTG `pixel`
 - VTG `line`
 - VTG `draw` for polyline point lists
+- VTG `curve` through `quadraticCurve(...)` and `cubicCurve(...)`
+- VTG `triangle`
+- VTG `path` with constrained absolute `M`, `L`, `Q`, `C`, and `Z` payloads
 - VTG `rect`
 - VTG `circle`
 - VTG `ellipse`
 - VTG `text`
+- VTG `image` for retained PNG/JPEG placement
 - VTG `capabilities?`
 - VTG `canvas?`
 - VTG `size?` fallback through `queryCurrentCanvas(...)`
@@ -32,17 +56,21 @@ The current Swift implementation wraps:
 - synchronous event polling with `readEvent(timeoutMilliseconds:)`
 - typed arrow-key events for `up`, `down`, `left`, and `right`
 - terminal character-cell size queries with `queryTerminalCellSize()`
-
-Planned but not yet implemented in the SDK:
-
-- VTG `curve` for quadratic and cubic Bezier segments
-- VTG `triangle` with stroke and fill support
+- small retained bitmap sprites that can be uploaded once, moved, rotated, and scaled without resending pixel data
 
 Retained scene helpers, layout abstractions, and higher-level widgets are planned follow-ups.
 
 The preferred input API should use Swift `AsyncSequence` event streams.
 
 The first async event pass exposes keyboard bytes, VTG-native mouse events, fallback ANSI mouse events, resize events, and polled canvas updates through `VectorTerminalCanvas.events(...)`.
+
+## Future Drawing Gallery Demo
+
+Add a `VectorDrawingGallery` demo that teaches the protocol as it runs. It should draw one example of each VTG drawing command, with the friendly SDK call shown beside or below the graphic and the raw escape sequence shown underneath.
+
+The first version should cover `pixel`, `line`, `draw`, `rect`, `circle`, `ellipse`, `text`, and `vectorPrint`. As later primitives land, add `curve`, `triangle`, bitmap image upload, bitmap sprite move/rotate examples, and the planned vector sprite subtype.
+
+The point of this demo is documentation by inspection: users should be able to run it, see the rendered result, see the Swift SDK call that produced it, and see the exact escape sequence that would produce the same command without the SDK.
 
 ## Additions From VectorTank Development
 
@@ -78,6 +106,7 @@ let canvas = try VectorTerminalCanvas()
 let size = canvas.queryCanvas()
 
 canvas.clear()
+canvas.pixel(id: "origin-dot", x: 20, y: 20, color: .green)
 canvas.rect(id: "border", x: 5, y: 5, width: 600, height: 400, stroke: .green)
 canvas.line(id: "line", x1: 40, y1: 40, x2: 300, y2: 240, stroke: .blue, width: 4)
 canvas.draw(id: "zig", points: [.init(x: 40, y: 80), .init(x: 90, y: 40), .init(x: 140, y: 80)], stroke: .cyan, width: 3)
@@ -114,8 +143,10 @@ The SDK should eventually provide:
 - A typed canvas API.
 - Immediate drawing first.
 - A polyline `draw(...)` primitive for batching connected line segments into one VTG command.
-- Bezier curve primitives in the core canvas API, probably shaped as `quadraticCurve(...)` and `cubicCurve(...)` helpers over one VTG `curve` escape sequence.
-- Filled polygon basics should start with `triangle(...)` before growing into arbitrary paths. This gives us enough surface area for icons, arrows, and simple vector art without drifting into a full shader or GPU material system.
+- Bezier curve primitives in the core canvas API, shaped as `quadraticCurve(...)` and `cubicCurve(...)` helpers over one VTG `curve` escape sequence.
+- Filled polygon basics start with `triangle(...)`, with constrained `path(...)` support for absolute `M`, `L`, `Q`, `C`, and `Z` path payloads.
+- Raster image placement starts with retained PNG/JPEG `image(...)` uploads. Small bitmap sprite helpers now support upload/place/move/rotate/scale for icons, cursors, simple game objects, and other tiny raster assets where vector primitives would be awkward. The next sprite subtype should be vector sprites: bounded vector mini-scenes that use the same placement and transform model.
+- Layer support starts with `setDefaultLayer(_:)` and optional `layer:` parameters on drawing helpers. The current terminal prototype orders overlay primitives by layer `0...4`; true layer 0 text/graphics mingling, independent layer scrolling, and clipping are planned for the SwiftTerm-hosted renderer.
 - A retained-object scene API as a second phase.
 - Off-screen rendering/composition support as part of the scene-graph phase.
 - Layout helpers for panes, grids, and hit regions.
