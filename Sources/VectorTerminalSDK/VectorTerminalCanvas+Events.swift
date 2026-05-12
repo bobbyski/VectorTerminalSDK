@@ -209,7 +209,9 @@ extension VectorTerminalCanvas {
         let modifiers = values["mods"] ?? "none"
         let scrollX = values["scrollX"].flatMap(Int.init)
         let scrollY = values["scrollY"].flatMap(Int.init)
-        eventDebugHandler?("SDK parser accepted VTG mouse type=\(type) button=\(button) x=\(x) y=\(y) cell=\(cellX.map(String.init) ?? "?"),\(cellY.map(String.init) ?? "?") scroll=\(scrollX.map(String.init) ?? "?"),\(scrollY.map(String.init) ?? "?") mods=\(modifiers) raw=\(response.debugEscapedForVTG)")
+        let hitID = values["hit"]
+        let targetID = values["target"]
+        eventDebugHandler?("SDK parser accepted VTG mouse type=\(type) button=\(button) x=\(x) y=\(y) cell=\(cellX.map(String.init) ?? "?"),\(cellY.map(String.init) ?? "?") scroll=\(scrollX.map(String.init) ?? "?"),\(scrollY.map(String.init) ?? "?") hit=\(hitID ?? "none") target=\(targetID ?? "none") mods=\(modifiers) raw=\(response.debugEscapedForVTG)")
         return VTGMouseEvent(
             x: x,
             y: y,
@@ -221,6 +223,8 @@ extension VectorTerminalCanvas {
             modifiers: modifiers,
             scrollX: scrollX,
             scrollY: scrollY,
+            hitID: hitID,
+            targetID: targetID,
             rawSequence: response
         )
     }

@@ -96,6 +96,8 @@ public struct VTGMouseEvent: Equatable {
     public var modifiers: String
     public var scrollX: Int?
     public var scrollY: Int?
+    public var hitID: String?
+    public var targetID: String?
     public var rawSequence: String
 
     public init(
@@ -109,6 +111,8 @@ public struct VTGMouseEvent: Equatable {
         modifiers: String = "none",
         scrollX: Int? = nil,
         scrollY: Int? = nil,
+        hitID: String? = nil,
+        targetID: String? = nil,
         rawSequence: String = ""
     ) {
         self.x = x
@@ -121,13 +125,16 @@ public struct VTGMouseEvent: Equatable {
         self.modifiers = modifiers
         self.scrollX = scrollX
         self.scrollY = scrollY
+        self.hitID = hitID
+        self.targetID = targetID
         self.rawSequence = rawSequence
     }
 
     public var debugDescription: String {
         let cellText = cellX.flatMap { cx in cellY.map { cy in " cell=\(cx),\(cy)" } } ?? ""
         let scrollText = scrollX.flatMap { sx in scrollY.map { sy in " scroll=\(sx),\(sy)" } } ?? ""
-        return "button=\(button) type=\(type) x=\(x) y=\(y)\(cellText)\(scrollText) mods=\(modifiers) raw=\(rawSequence.debugEscapedForVTG)"
+        let hitText = hitID.map { " hit=\($0)\(targetID.map { " target=\($0)" } ?? "")" } ?? ""
+        return "button=\(button) type=\(type) x=\(x) y=\(y)\(cellText)\(scrollText)\(hitText) mods=\(modifiers) raw=\(rawSequence.debugEscapedForVTG)"
     }
 }
 

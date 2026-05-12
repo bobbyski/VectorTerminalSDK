@@ -146,7 +146,8 @@ The SDK should eventually provide:
 - Bezier curve primitives in the core canvas API, shaped as `quadraticCurve(...)` and `cubicCurve(...)` helpers over one VTG `curve` escape sequence.
 - Filled polygon basics start with `triangle(...)`, with constrained `path(...)` support for absolute `M`, `L`, `Q`, `C`, and `Z` path payloads.
 - Raster image placement starts with retained PNG/JPEG `image(...)` uploads. Small bitmap sprite helpers now support upload/place/move/rotate/scale for icons, cursors, simple game objects, and other tiny raster assets where vector primitives would be awkward. The next sprite subtype should be vector sprites: bounded vector mini-scenes that use the same placement and transform model.
-- Layer support starts with `setDefaultLayer(_:)` and optional `layer:` parameters on drawing helpers. The current terminal prototype orders overlay primitives by layer `0...4`; true layer 0 text/graphics mingling, independent layer scrolling, and clipping are planned for the SwiftTerm-hosted renderer.
+- Layer support starts with `setDefaultLayer(_:)`, `scrollLayer(_:x:y:)`, `clipLayer(_:x:y:width:height:)`, `clearLayerClip(_:)`, and optional `layer:` parameters on drawing helpers. The current terminal prototype orders overlay primitives by layer `0...4`, supports independent scroll offsets for layers `1...4`, and supports rectangular layer clips; true layer 0 text/graphics mingling, object-level clips, and non-rectangular clipping are planned for later renderer work.
+- Hit regions start with rectangular `hitRegion(...)` registration and `clearHitRegions(...)`. VTG mouse events include `hitID` and optional `targetID` when a click, drag, raw mouse, or scroll event lands inside the topmost matching region.
 - A retained-object scene API as a second phase.
 - Off-screen rendering/composition support as part of the scene-graph phase.
 - Layout helpers for panes, grids, and hit regions.

@@ -24,6 +24,79 @@ extension VectorTerminalCanvas {
         send("defaultLayer,value=\(layer)")
     }
 
+    /// Set an overlay layer's render offset in pixels.
+    ///
+    /// This moves everything retained on the layer without changing object
+    /// coordinates. Layer 0 is intentionally ignored in this first pass because
+    /// text/graphics mingling needs the future SwiftTerm-hosted renderer.
+    public func scrollLayer(_ layer: Int, x: Int, y: Int) {
+        guard isSupportedVTGLayer(layer), layer > 0 else {
+            return
+        }
+        send("layerScroll,layer=\(layer),x=\(x),y=\(y)")
+    }
+
+    /// Apply a rectangular clip to a graphics layer.
+    ///
+    /// Clipping is layer-scoped in this first pass. That keeps draw commands
+    /// simple and gives demos a useful way to constrain parallax panes, HUDs,
+    /// and sprite arenas before retained object groups exist.
+    public func clipLayer(_ layer: Int, x: Int, y: Int, width: Int, height: Int) {
+        guard isSupportedVTGLayer(layer), width > 0, height > 0 else {
+            return
+        }
+        send("clip,layer=\(layer),x=\(x),y=\(y),w=\(width),h=\(height)")
+    }
+
+    /// Remove any rectangular clip from a graphics layer.
+    public func clearLayerClip(_ layer: Int) {
+        guard isSupportedVTGLayer(layer) else {
+            return
+        }
+        send("clipClear,layer=\(layer)")
+    }
+
+    /// Register or replace a rectangular hit region.
+    ///
+    /// Mouse events emitted inside the region include `hitID` and optional
+    /// `targetID`. Regions are evaluated by layer from top to bottom, then by
+    /// registration order within a layer.
+    public func hitRegion(
+        id: String,
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int,
+        layer: Int? = nil,
+        target: String? = nil
+    ) {
+        guard isValidVTGIdentifier(id), width > 0, height > 0 else {
+            return
+        }
+        if let target, !isValidVTGIdentifier(target) {
+            return
+        }
+        let targetParameter = target.map { ",target=\($0)" } ?? ""
+        send("hit,id=\(id),x=\(x),y=\(y),w=\(width),h=\(height)\(layerParameter(layer))\(targetParameter)")
+    }
+
+    /// Remove one hit region, all hit regions on a layer, or every hit region.
+    public func clearHitRegions(id: String? = nil, layer: Int? = nil) {
+        if let id {
+            guard isValidVTGIdentifier(id) else {
+                return
+            }
+            send("hitClear,id=\(id)")
+        } else if let layer {
+            guard isSupportedVTGLayer(layer) else {
+                return
+            }
+            send("hitClear,layer=\(layer)")
+        } else {
+            send("hitClear")
+        }
+    }
+
     /// Draw or replace a single pixel.
     public func pixel(
         id: String,
