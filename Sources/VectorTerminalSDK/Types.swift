@@ -69,6 +69,40 @@ public struct VTGPoint: Equatable {
     }
 }
 
+/// Named layer values for VTG drawing commands.
+///
+/// Layer 0 is reserved for the future shared text/graphics plane. Layers 1-4
+/// are the current overlay layers, with layer 1 as the default. These constants
+/// intentionally remain `Int` values so they can be passed directly to existing
+/// SDK methods that accept `layer: Int?`.
+public enum VTGLayer {
+    public static let textPlane = 0
+    public static let defaultOverlay = 1
+    public static let overlay1 = 1
+    public static let overlay2 = 2
+    public static let overlay3 = 3
+    public static let overlay4 = 4
+
+    public static let supportedRange = textPlane...overlay4
+    public static let overlayRange = overlay1...overlay4
+    public static let advertisedRange = "\(textPlane)-\(overlay4)"
+
+    /// Clamp arbitrary user input into the VTG layer range.
+    public static func clamped(_ layer: Int) -> Int {
+        min(supportedRange.upperBound, max(supportedRange.lowerBound, layer))
+    }
+
+    /// Return whether a layer is accepted by VTG drawing commands.
+    public static func isSupported(_ layer: Int) -> Bool {
+        supportedRange.contains(layer)
+    }
+
+    /// Return whether a layer can currently scroll independently.
+    public static func isScrollable(_ layer: Int) -> Bool {
+        overlayRange.contains(layer)
+    }
+}
+
 /// Errors thrown by SDK initialization.
 public enum VectorTerminalSDKError: Error, LocalizedError {
     case vectorTerminalNotDetected

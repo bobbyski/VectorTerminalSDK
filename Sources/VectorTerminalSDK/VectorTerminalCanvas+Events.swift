@@ -189,14 +189,7 @@ extension VectorTerminalCanvas {
     /// That dual coordinate payload was added after the TicTacToe mouse
     /// debugging pass and is still useful for demos that need live diagnostics.
     private func parseVTGMouseEvent(from response: String) -> VTGMouseEvent? {
-        let fields = response.split(separator: ",")
-        let values = Dictionary(uniqueKeysWithValues: fields.compactMap { field -> (String, String)? in
-            let pair = field.split(separator: "=", maxSplits: 1)
-            guard pair.count == 2 else {
-                return nil
-            }
-            return (String(pair[0]), String(pair[1]))
-        })
+        let values = vtgFields(from: response)
         guard let x = values["x"].flatMap(Int.init),
               let y = values["y"].flatMap(Int.init) else {
             eventDebugHandler?("SDK parser rejected VTG mouse raw=\(response.debugEscapedForVTG)")

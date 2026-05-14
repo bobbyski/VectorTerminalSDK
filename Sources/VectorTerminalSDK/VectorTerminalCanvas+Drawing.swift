@@ -21,7 +21,18 @@ extension VectorTerminalCanvas {
         guard isSupportedVTGLayer(layer) else {
             return
         }
-        send("defaultLayer,value=\(layer)")
+        send("defaultLayer,layer=\(layer)")
+    }
+
+    /// Move an existing retained primitive to a different graphics layer.
+    ///
+    /// This updates layer metadata without redrawing the primitive. Unknown ids
+    /// are ignored by the terminal.
+    public func setLayer(id: String, layer: Int) {
+        guard isValidVTGIdentifier(id), isSupportedVTGLayer(layer) else {
+            return
+        }
+        send("layer,id=\(id),layer=\(layer)")
     }
 
     /// Set an overlay layer's render offset in pixels.
@@ -30,10 +41,23 @@ extension VectorTerminalCanvas {
     /// coordinates. Layer 0 is intentionally ignored in this first pass because
     /// text/graphics mingling needs the future SwiftTerm-hosted renderer.
     public func scrollLayer(_ layer: Int, x: Int, y: Int) {
-        guard isSupportedVTGLayer(layer), layer > 0 else {
+        guard VTGLayer.isScrollable(layer) else {
             return
         }
         send("layerScroll,layer=\(layer),x=\(x),y=\(y)")
+    }
+
+    /// Set an overlay layer's opacity multiplier.
+    ///
+    /// This is useful for HUDs and transient overlays: callers can fade an
+    /// entire layer without resending every retained primitive on that layer.
+    /// Layer 0 is intentionally ignored until the shared text/graphics plane
+    /// has renderer semantics for opacity.
+    public func setLayerAlpha(_ layer: Int, alpha: Double) {
+        guard VTGLayer.isScrollable(layer) else {
+            return
+        }
+        send("layerAlpha,layer=\(layer),alpha=\(vtgNumber(min(1, max(0, alpha))))")
     }
 
     /// Apply a rectangular clip to a graphics layer.
@@ -324,6 +348,26 @@ extension VectorTerminalCanvas {
         send("spriteUpload,id=\(id),format=jpeg,width=\(width),height=\(height)", payload: jpegData.base64EncodedString())
     }
 
+    /// Upload a vector sprite asset without placing it.
+    ///
+    /// Vector sprites use the same retained sprite instance and transform
+    /// commands as bitmap sprites. The first protocol slice stores one
+    /// constrained VTG path payload per asset.
+    public func uploadVectorSprite(
+        id: String,
+        width: Int,
+        height: Int,
+        path: String,
+        stroke: VTGColor? = nil,
+        fill: VTGColor? = nil,
+        lineWidth: Double = 1
+    ) {
+        guard isValidVTGIdentifier(id) else {
+            return
+        }
+        send("vectorSpriteUpload,id=\(id),width=\(width),height=\(height)\(colorParameter("stroke", stroke))\(colorParameter("fill", fill)),lineWidth=\(vtgNumber(lineWidth))", payload: path)
+    }
+
     /// Remove one uploaded sprite asset and any instances using it.
     public func removeSprite(id: String) {
         guard isValidVTGIdentifier(id) else {
@@ -349,12 +393,14 @@ extension VectorTerminalCanvas {
         y: Int,
         rotation: Double = 0,
         scale: Double = 1,
+        anchorX: Double = 0.5,
+        anchorY: Double = 0.5,
         layer: Int? = nil
     ) {
         guard isValidVTGIdentifier(id), isValidVTGIdentifier(imageID) else {
             return
         }
-        send("sprite,id=\(id),image=\(imageID),x=\(x),y=\(y),rotation=\(vtgNumber(rotation)),scale=\(vtgNumber(scale))\(layerParameter(layer))")
+        send("sprite,id=\(id),image=\(imageID),x=\(x),y=\(y),rotation=\(vtgNumber(rotation)),scale=\(vtgNumber(scale)),anchorX=\(vtgNumber(clampedUnit(anchorX))),anchorY=\(vtgNumber(clampedUnit(anchorY)))\(layerParameter(layer))")
     }
 
     /// Move a retained sprite instance without changing rotation or scale.
@@ -379,12 +425,22 @@ extension VectorTerminalCanvas {
         x: Int,
         y: Int,
         rotation: Double,
-        scale: Double
+        scale: Double,
+        anchorX: Double? = nil,
+        anchorY: Double? = nil
     ) {
         guard isValidVTGIdentifier(id) else {
             return
         }
-        send("spriteTransform,id=\(id),x=\(x),y=\(y),rotation=\(vtgNumber(rotation)),scale=\(vtgNumber(scale))")
+        send("spriteTransform,id=\(id),x=\(x),y=\(y),rotation=\(vtgNumber(rotation)),scale=\(vtgNumber(scale))\(optionalUnitParameter("anchorX", anchorX))\(optionalUnitParameter("anchorY", anchorY))")
+    }
+
+    /// Update only the retained sprite anchor point.
+    public func anchorSprite(id: String, anchorX: Double, anchorY: Double) {
+        guard isValidVTGIdentifier(id) else {
+            return
+        }
+        send("spriteAnchor,id=\(id),anchorX=\(vtgNumber(clampedUnit(anchorX))),anchorY=\(vtgNumber(clampedUnit(anchorY)))")
     }
 
     /// Draw ASCII text using the SDK's vector glyph strokes.
@@ -465,8 +521,29 @@ private extension VectorTerminalCanvas {
         return ",layer=\(layer)"
     }
 
+    /// Emit an optional color parameter using the SDK's raw VTG color token.
+    func colorParameter(_ name: String, _ color: VTGColor?) -> String {
+        guard let color else {
+            return ""
+        }
+        return ",\(name)=\(color.rawValue)"
+    }
+
+    /// Keep normalized protocol values inside their legal range.
+    func clampedUnit(_ value: Double) -> Double {
+        min(1, max(0, value))
+    }
+
+    /// Emit an optional normalized numeric parameter.
+    func optionalUnitParameter(_ name: String, _ value: Double?) -> String {
+        guard let value else {
+            return ""
+        }
+        return ",\(name)=\(vtgNumber(clampedUnit(value)))"
+    }
+
     /// Current prototype supports layer 0 plus four overlay layers.
     func isSupportedVTGLayer(_ layer: Int) -> Bool {
-        (0...4).contains(layer)
+        VTGLayer.isSupported(layer)
     }
 }

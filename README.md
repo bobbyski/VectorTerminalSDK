@@ -24,6 +24,7 @@ The SDK source is split by responsibility so protocol growth does not turn into 
 - `VectorTerminalCanvas+Queries.swift`: VTG capabilities, canvas, size, resize subscriptions, and terminal cell-size queries.
 - `VectorTerminalCanvas+Events.swift`: synchronous and async keyboard, mouse, resize, and canvas event parsing.
 - `VectorTerminalCanvas+ANSI.swift`: standard ANSI screen, cursor, color, text-attribute, mouse, paste, and focus helpers.
+- `VectorTerminalSession.swift`: scoped full-screen lifecycle setup/cleanup for demos and apps.
 - `VectorGlyphs.swift`: ASCII-subset vector glyph stroke definitions.
 - `TerminalRawMode.swift`: raw terminal input setup/restore helpers.
 - `DebugEscaping.swift`: readable escape-sequence formatting for diagnostics.
@@ -54,9 +55,13 @@ The current Swift implementation wraps:
 - `vectorPrint(id:x:y:height:value:stroke:width:)` for ASCII-subset vector text built on `draw`
 - async VTG-native mouse events with pixel coordinates, terminal cell coordinates, mouse button, raw down/up, debounced click, drag, and scroll wheel data
 - synchronous event polling with `readEvent(timeoutMilliseconds:)`
+- `VectorTerminalSession` for scoped alternate screen, cursor, resize, mouse, raw-input, and cleanup management
 - typed arrow-key events for `up`, `down`, `left`, and `right`
 - terminal character-cell size queries with `queryTerminalCellSize()`
-- small retained bitmap sprites that can be uploaded once, moved, rotated, and scaled without resending pixel data
+- small retained bitmap or vector sprites that can be uploaded once, moved, rotated, anchored, and scaled without resending payload data
+- named VTG layer constants through `VTGLayer.textPlane`, `VTGLayer.defaultOverlay`, and `VTGLayer.overlay1...overlay4`
+- retained-object layer reassignment with `setLayer(id:layer:)`
+- overlay layer opacity with `setLayerAlpha(_:alpha:)`
 
 Retained scene helpers, layout abstractions, and higher-level widgets are planned follow-ups.
 
@@ -64,11 +69,11 @@ The preferred input API should use Swift `AsyncSequence` event streams.
 
 The first async event pass exposes keyboard bytes, VTG-native mouse events, fallback ANSI mouse events, resize events, and polled canvas updates through `VectorTerminalCanvas.events(...)`.
 
-## Future Drawing Gallery Demo
+## VTGShowcase Gallery Demo
 
-Add a `VectorDrawingGallery` demo that teaches the protocol as it runs. It should draw one example of each VTG drawing command, with the friendly SDK call shown beside or below the graphic and the raw escape sequence shown underneath.
+`VTGShowcase` teaches the protocol as it runs. It draws examples of VTG drawing commands, with the friendly SDK call shown beside or below the graphic and the raw escape sequence shown underneath.
 
-The first version should cover `pixel`, `line`, `draw`, `rect`, `circle`, `ellipse`, `text`, and `vectorPrint`. As later primitives land, add `curve`, `triangle`, bitmap image upload, bitmap sprite move/rotate examples, and the planned vector sprite subtype.
+The current version covers `pixel`, `line`, `draw`, `rect`, `circle`, `ellipse`, `text`, `vectorPrint`, `curve`, `triangle`, bitmap image upload, bitmap sprite move/rotate examples, first-pass vector sprites backed by constrained path payloads, layers, clipping, hit regions, and a playable tic-tac-toe tab.
 
 The point of this demo is documentation by inspection: users should be able to run it, see the rendered result, see the Swift SDK call that produced it, and see the exact escape sequence that would produce the same command without the SDK.
 
@@ -80,12 +85,14 @@ VectorTank pushed the SDK beyond one-shot drawing and mouse-click demos. The fol
 - `queryTerminalCellSize()`: reads the current terminal character grid through `ioctl(TIOCGWINSZ)`.
 - `queryCurrentCanvas(timeoutMilliseconds:)`: asks `canvas?`, falls back to `size?`, then falls back to `capabilities?` canvas fields. This gives real-time demos one preferred way to learn their pixel canvas.
 - `readEvent(timeoutMilliseconds:)`: a synchronous event-polling API for frame loops that want to drain input each tick.
+- `VectorTerminalSession`: a scoped lifecycle helper for alternate screen, hidden cursor, resize/mouse subscriptions, optional raw input, and idempotent cleanup.
 - `ANSISpecialKey` and `.specialKey(...)`: typed arrow-key events for continuous movement controls.
 - CSI/SS3 escape completion fixes: arrow keys now wait for the real final byte instead of treating `ESC [` as complete.
 - SGR mouse escape completion fixes: `ESC [ < ... M/m` is treated as one complete mouse event.
+- VTG APC envelope cleanup: query and event parsers strip the trailing `ESC \` before reading comma fields, preventing the final value from being polluted by the string terminator.
 - Better VTG resize/canvas event parsing through the same event path used by game loops.
 
-These APIs are intentionally still low-level. A later `VectorTerminalSession` or frame-loop helper should wrap common setup/teardown patterns such as alternate screen, raw input, hidden cursor, resize subscriptions, `clear`, and `present`.
+These APIs are intentionally still low-level. `VectorTerminalSession` now wraps common setup/teardown patterns such as alternate screen, raw input, hidden cursor, resize subscriptions, mouse subscriptions, and cleanup. A later frame-loop helper can build on top of it with a steady tick rate, input draining, and optional offscreen-frame coordination.
 
 VTG mouse events use APC framing and include both coordinate systems:
 
@@ -97,6 +104,25 @@ ESC _ VTG;mouse,type=scroll,button=5,x=412,y=318,cellX=42,cellY=17,scrollX=0,scr
 
 `x`/`y` are graphics-canvas pixel coordinates. `cellX`/`cellY` are 1-based terminal cell coordinates. Gameplay-style code should usually act on `type=click`, which VectorTerminal synthesizes from a matching mouse-down/mouse-up pair.
 
+## Capability Schema
+
+`capabilities?` advertises a versioned flat schema while preserving older fields:
+
+```text
+ESC _ VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=0.1,... ESC \
+```
+
+Important fields:
+
+- `protocol=VTG`: identifies the graphics protocol.
+- `schema=vtg.capabilities.v1`: identifies the shape of the capability response.
+- `version=0.1`: identifies the VTG wire command version.
+- `commands=...`: pipe-separated implemented command names.
+- `planned=...`: pipe-separated documented command names that are not yet implemented.
+- `events=mouse|resize`: host-published event streams.
+
+Older SDK code can continue checking only for `_VTG;capabilities`. Newer clients should prefer `schema` and `commands` when choosing optional features.
+
 ## Example
 
 ```swift
@@ -105,14 +131,16 @@ import VectorTerminalSDK
 let canvas = try VectorTerminalCanvas()
 let size = canvas.queryCanvas()
 
-canvas.clear()
-canvas.pixel(id: "origin-dot", x: 20, y: 20, color: .green)
-canvas.rect(id: "border", x: 5, y: 5, width: 600, height: 400, stroke: .green)
-canvas.line(id: "line", x1: 40, y1: 40, x2: 300, y2: 240, stroke: .blue, width: 4)
-canvas.draw(id: "zig", points: [.init(x: 40, y: 80), .init(x: 90, y: 40), .init(x: 140, y: 80)], stroke: .cyan, width: 3)
-canvas.vectorPrint(id: "arcade", x: 40, y: 120, height: 42, value: "GAME OVER", stroke: .green, width: 3)
-canvas.text(id: "label", x: 40, y: 40, value: "Hello VTG", color: .white, size: 18)
-canvas.present()
+VectorTerminalSession.run(canvas: canvas) { _ in
+    canvas.clear()
+    canvas.pixel(id: "origin-dot", x: 20, y: 20, color: .green)
+    canvas.rect(id: "border", x: 5, y: 5, width: 600, height: 400, stroke: .green)
+    canvas.line(id: "line", x1: 40, y1: 40, x2: 300, y2: 240, stroke: .blue, width: 4)
+    canvas.draw(id: "zig", points: [.init(x: 40, y: 80), .init(x: 90, y: 40), .init(x: 140, y: 80)], stroke: .cyan, width: 3)
+    canvas.vectorPrint(id: "arcade", x: 40, y: 120, height: 42, value: "GAME OVER", stroke: .green, width: 3)
+    canvas.text(id: "label", x: 40, y: 40, value: "Hello VTG", color: .white, size: 18)
+    canvas.present()
+}
 ```
 
 ## ANSI Fallback
@@ -141,18 +169,19 @@ In the fallback case, VTG drawing methods no-op, but ANSI methods such as `clear
 The SDK should eventually provide:
 
 - A typed canvas API.
+- A scoped session API for full-screen app setup/teardown. The first `VectorTerminalSession` pass is implemented.
 - Immediate drawing first.
 - A polyline `draw(...)` primitive for batching connected line segments into one VTG command.
 - Bezier curve primitives in the core canvas API, shaped as `quadraticCurve(...)` and `cubicCurve(...)` helpers over one VTG `curve` escape sequence.
 - Filled polygon basics start with `triangle(...)`, with constrained `path(...)` support for absolute `M`, `L`, `Q`, `C`, and `Z` path payloads.
-- Raster image placement starts with retained PNG/JPEG `image(...)` uploads. Small bitmap sprite helpers now support upload/place/move/rotate/scale for icons, cursors, simple game objects, and other tiny raster assets where vector primitives would be awkward. The next sprite subtype should be vector sprites: bounded vector mini-scenes that use the same placement and transform model.
-- Layer support starts with `setDefaultLayer(_:)`, `scrollLayer(_:x:y:)`, `clipLayer(_:x:y:width:height:)`, `clearLayerClip(_:)`, and optional `layer:` parameters on drawing helpers. The current terminal prototype orders overlay primitives by layer `0...4`, supports independent scroll offsets for layers `1...4`, and supports rectangular layer clips; true layer 0 text/graphics mingling, object-level clips, and non-rectangular clipping are planned for later renderer work.
+- Raster image placement starts with retained PNG/JPEG `image(...)` uploads. Small bitmap sprite helpers support upload/place/move/rotate/anchor/scale for icons, cursors, simple game objects, and other tiny raster assets where vector primitives would be awkward. Vector sprite helpers now upload one constrained path payload as a reusable sprite asset and use the same placement, normalized anchor, and transform model as bitmap sprites.
+- Layer support starts with named constants in `VTGLayer`, `setDefaultLayer(_:)`, `setLayer(id:layer:)`, `scrollLayer(_:x:y:)`, `setLayerAlpha(_:alpha:)`, `clipLayer(_:x:y:width:height:)`, `clearLayerClip(_:)`, and optional `layer:` parameters on drawing helpers. The current terminal prototype orders overlay primitives by layer `0...4`, supports independent scroll offsets and opacity for layers `1...4`, and supports rectangular layer clips; true layer 0 text/graphics mingling, object-level clips, and non-rectangular clipping are planned for later renderer work.
 - Hit regions start with rectangular `hitRegion(...)` registration and `clearHitRegions(...)`. VTG mouse events include `hitID` and optional `targetID` when a click, drag, raw mouse, or scroll event lands inside the topmost matching region.
 - A retained-object scene API as a second phase.
 - Off-screen rendering/composition support as part of the scene-graph phase.
 - Layout helpers for panes, grids, and hit regions.
 - Mouse and keyboard input wrappers exposed as async event streams.
-- Automatic alternate-screen and cleanup helpers.
+- Higher-level frame-loop helpers built on top of `VectorTerminalSession`.
 
 Widgets should live in a separate package rather than the core SDK. The likely split is:
 

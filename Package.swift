@@ -20,6 +20,11 @@ let package = Package(
             name: "VectorTerminalSDKDemo",
             dependencies: ["VectorTerminalSDK"],
             path: "Sources/VectorTerminalSDKDemo"
+        ),
+        .testTarget(
+            name: "VectorTerminalSDKTests",
+            dependencies: ["VectorTerminalSDK"],
+            path: "Tests/VectorTerminalSDKTests"
         )
     ]
 )
