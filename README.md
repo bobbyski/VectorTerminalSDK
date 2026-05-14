@@ -85,14 +85,14 @@ VectorTank pushed the SDK beyond one-shot drawing and mouse-click demos. The fol
 - `queryTerminalCellSize()`: reads the current terminal character grid through `ioctl(TIOCGWINSZ)`.
 - `queryCurrentCanvas(timeoutMilliseconds:)`: asks `canvas?`, falls back to `size?`, then falls back to `capabilities?` canvas fields. This gives real-time demos one preferred way to learn their pixel canvas.
 - `readEvent(timeoutMilliseconds:)`: a synchronous event-polling API for frame loops that want to drain input each tick.
-- `VectorTerminalSession`: a scoped lifecycle helper for alternate screen, hidden cursor, resize/mouse subscriptions, optional raw input, and idempotent cleanup.
+- `VectorTerminalSession`: a scoped lifecycle helper for alternate screen, hidden cursor, resize/mouse subscriptions, optional raw input, idempotent cleanup, broad mouse-mode teardown, and a short pending-input drain before restoring cooked terminal mode.
 - `ANSISpecialKey` and `.specialKey(...)`: typed arrow-key events for continuous movement controls.
 - CSI/SS3 escape completion fixes: arrow keys now wait for the real final byte instead of treating `ESC [` as complete.
 - SGR mouse escape completion fixes: `ESC [ < ... M/m` is treated as one complete mouse event.
 - VTG APC envelope cleanup: query and event parsers strip the trailing `ESC \` before reading comma fields, preventing the final value from being polluted by the string terminator.
 - Better VTG resize/canvas event parsing through the same event path used by game loops.
 
-These APIs are intentionally still low-level. `VectorTerminalSession` now wraps common setup/teardown patterns such as alternate screen, raw input, hidden cursor, resize subscriptions, mouse subscriptions, and cleanup. A later frame-loop helper can build on top of it with a steady tick rate, input draining, and optional offscreen-frame coordination.
+These APIs are intentionally still low-level. `VectorTerminalSession` now wraps common setup/teardown patterns such as alternate screen, raw input, hidden cursor, resize subscriptions, mouse subscriptions, and cleanup. On teardown it disables VTG-native mouse events plus common xterm mouse modes before briefly draining pending input, which keeps queued mouse-up/click bytes from leaking into the shell or the next app launch. A later frame-loop helper can build on top of it with a steady tick rate, input draining, and optional offscreen-frame coordination.
 
 VTG mouse events use APC framing and include both coordinate systems:
 

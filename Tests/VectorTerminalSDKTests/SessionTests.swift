@@ -36,6 +36,8 @@ struct SessionTests {
         #expect(output.contains("\(esc)_VTG;mouseEvents,enabled=1,mode=all\(esc)\\"))
         #expect(output.contains("\(esc)_VTG;mouseEvents,enabled=0\(esc)\\"))
         #expect(output.contains("\(esc)_VTG;resizeEvents,enabled=0\(esc)\\"))
+        #expect(output.contains("\(esc)[?1016l"))
+        #expect(output.contains("\(esc)[?1015l"))
         #expect(output.contains("\(esc)[?25h"))
         #expect(output.contains("\(esc)[0m"))
         #expect(output.contains("\(esc)[?1049l"))

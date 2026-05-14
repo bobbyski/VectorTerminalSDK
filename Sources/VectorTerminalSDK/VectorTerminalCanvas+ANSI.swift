@@ -186,7 +186,13 @@ extension VectorTerminalCanvas {
     /// Disable VTG-native and ANSI mouse reporting.
     public func disableMouseReporting() {
         send("mouseEvents,enabled=0")
+        writeANSI("\(esc)[?1016l")
+        writeANSI("\(esc)[?1015l")
         writeANSI("\(esc)[?1006l")
+        writeANSI("\(esc)[?1005l")
+        writeANSI("\(esc)[?1003l")
+        writeANSI("\(esc)[?1002l")
         writeANSI("\(esc)[?1000l")
+        writeANSI("\(esc)[?9l")
     }
 }
