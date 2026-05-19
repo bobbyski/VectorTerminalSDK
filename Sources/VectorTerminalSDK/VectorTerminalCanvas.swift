@@ -7,18 +7,33 @@ import Foundation
 /// output, or use `noOp(...)` when they want drawing calls to silently do
 /// nothing on traditional terminals.
 public final class VectorTerminalCanvas {
-    let output: FileHandle
+    let output: VTGOutput
     let input: FileHandle
     let esc = "\u{1B}"
     let isEnabled: Bool
+    var storedDefaultLayer = VTGLayer.defaultOverlay
 
     /// Optional hook used by demos to surface parser details during debugging.
     public var eventDebugHandler: ((String) -> Void)?
 
+    /// Default graphics layer used by VTG commands that omit `layer:`.
+    ///
+    /// Assigning this property updates the terminal's retained VTG session
+    /// default through `defaultLayer,layer=<n>`. Invalid layer values are
+    /// ignored so app-side state cannot drift away from terminal-side state.
+    public var defaultLayer: Int {
+        get {
+            storedDefaultLayer
+        }
+        set {
+            setDefaultLayer(newValue)
+        }
+    }
+
     /// Create a graphics-enabled VTG canvas after verifying terminal support.
     public init(
         input: FileHandle = .standardInput,
-        output: FileHandle = .standardOutput,
+        output: VTGOutput = FileHandle.standardOutput,
         timeoutMilliseconds: Int = 750
     ) throws {
         self.input = input
@@ -36,12 +51,25 @@ public final class VectorTerminalCanvas {
     /// ANSI helper methods still write to `output`; only VTG graphics are gated.
     public static func noOp(
         input: FileHandle = .standardInput,
-        output: FileHandle = .standardOutput
+        output: VTGOutput = FileHandle.standardOutput
     ) -> VectorTerminalCanvas {
         VectorTerminalCanvas(input: input, output: output, isEnabled: false)
     }
 
-    private init(input: FileHandle, output: FileHandle, isEnabled: Bool) {
+    /// Create an enabled canvas for a host that has already selected a
+    /// VTG-capable terminal view.
+    ///
+    /// Use this for in-process hosts where there is no stdout/stdin handshake
+    /// path. Process-hosted apps should continue using the throwing initializer
+    /// so traditional terminals do not see VTG drawing sequences.
+    public static func hostValidated(
+        input: FileHandle = .standardInput,
+        output: VTGOutput
+    ) -> VectorTerminalCanvas {
+        VectorTerminalCanvas(input: input, output: output, isEnabled: true)
+    }
+
+    private init(input: FileHandle, output: VTGOutput, isEnabled: Bool) {
         self.input = input
         self.output = output
         self.isEnabled = isEnabled

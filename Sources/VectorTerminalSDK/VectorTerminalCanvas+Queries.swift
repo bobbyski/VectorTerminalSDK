@@ -14,6 +14,18 @@ extension VectorTerminalCanvas {
         return parseWidthHeight(from: response, source: "canvas?")
     }
 
+    /// Query the current VTG pixel canvas size with the legacy `size?` command.
+    ///
+    /// Prefer `queryCanvas(...)` or `queryCurrentCanvas(...)` for new code.
+    /// This one-to-one wrapper exists for compatibility, diagnostics, and
+    /// escape-sequence coverage audits.
+    public func querySize(timeoutMilliseconds: Int = 750) -> VTGCanvas? {
+        guard let response = query("size?", timeoutMilliseconds: timeoutMilliseconds) else {
+            return nil
+        }
+        return parseWidthHeight(from: response, source: "size?")
+    }
+
     /// Query the best available pixel canvas size.
     ///
     /// VectorTank exposed that real-time apps should not need to care which
@@ -24,8 +36,7 @@ extension VectorTerminalCanvas {
         if let canvas = queryCanvas(timeoutMilliseconds: timeoutMilliseconds) {
             return canvas
         }
-        if let response = query("size?", timeoutMilliseconds: timeoutMilliseconds),
-           let canvas = parseWidthHeight(from: response, source: "size?") {
+        if let canvas = querySize(timeoutMilliseconds: timeoutMilliseconds) {
             return canvas
         }
         if let response = queryCapabilities(timeoutMilliseconds: timeoutMilliseconds),

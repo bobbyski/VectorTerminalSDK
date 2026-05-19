@@ -20,7 +20,7 @@ struct EventParsingTests {
         let harness = EventHarness()
         defer { harness.close() }
 
-        harness.write("\(esc)_VTG;mouse,type=scroll,button=5,x=412,y=318,cellX=42,cellY=17,scrollX=0,scrollY=-3,mods=shift|ctrl,hit=quit,target=quitButton\(esc)\\")
+        harness.write("\(esc)_VTG;mouse,type=scroll,button=5,x=412,y=318,cellX=42,cellY=17,scrollX=0,scrollY=-3,viewportLayer=4,virtualX=120,virtualY=80,mods=shift|ctrl,hit=quit,target=quitButton\(esc)\\")
 
         guard case .mouse(let mouse) = harness.canvas.readEvent(timeoutMilliseconds: 50) else {
             Issue.record("Expected VTG mouse event")
@@ -35,6 +35,9 @@ struct EventParsingTests {
         #expect(mouse.cellY == 17)
         #expect(mouse.scrollX == 0)
         #expect(mouse.scrollY == -3)
+        #expect(mouse.viewportLayer == 4)
+        #expect(mouse.virtualX == 120)
+        #expect(mouse.virtualY == 80)
         #expect(mouse.modifiers == "shift|ctrl")
         #expect(mouse.hitID == "quit")
         #expect(mouse.targetID == "quitButton")
@@ -58,6 +61,58 @@ struct EventParsingTests {
             height: 1000,
             source: "capabilities",
             rawResponse: "\(esc)_VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=0.1,canvasWidth=1440,canvasHeight=1000\(esc)\\"
+        )))
+    }
+
+    @Test func readEventParsesFrameLifecycleResponses() throws {
+        let harness = EventHarness()
+        defer { harness.close() }
+
+        harness.write("\(esc)_VTG;frameStarted,id=demo,timeout=500\(esc)\\")
+        #expect(harness.canvas.readEvent(timeoutMilliseconds: 50) == .frame(VTGFrameEvent(
+            type: "frameStarted",
+            id: "demo",
+            timeoutMilliseconds: 500,
+            rawResponse: "\(esc)_VTG;frameStarted,id=demo,timeout=500\(esc)\\"
+        )))
+
+        harness.write("\(esc)_VTG;frameCommitted,id=demo\(esc)\\")
+        #expect(harness.canvas.readEvent(timeoutMilliseconds: 50) == .frame(VTGFrameEvent(
+            type: "frameCommitted",
+            id: "demo",
+            rawResponse: "\(esc)_VTG;frameCommitted,id=demo\(esc)\\"
+        )))
+
+        harness.write("\(esc)_VTG;frameCanceled,id=demo,reason=app\(esc)\\")
+        #expect(harness.canvas.readEvent(timeoutMilliseconds: 50) == .frame(VTGFrameEvent(
+            type: "frameCanceled",
+            id: "demo",
+            reason: "app",
+            rawResponse: "\(esc)_VTG;frameCanceled,id=demo,reason=app\(esc)\\"
+        )))
+
+        harness.write("\(esc)_VTG;frameTimeout,id=demo,reason=timeout\(esc)\\")
+        #expect(harness.canvas.readEvent(timeoutMilliseconds: 50) == .frame(VTGFrameEvent(
+            type: "frameTimeout",
+            id: "demo",
+            reason: "timeout",
+            rawResponse: "\(esc)_VTG;frameTimeout,id=demo,reason=timeout\(esc)\\"
+        )))
+
+        harness.write("\(esc)_VTG;frameRejected,id=demo2,reason=nested\(esc)\\")
+        #expect(harness.canvas.readEvent(timeoutMilliseconds: 50) == .frame(VTGFrameEvent(
+            type: "frameRejected",
+            id: "demo2",
+            reason: "nested",
+            rawResponse: "\(esc)_VTG;frameRejected,id=demo2,reason=nested\(esc)\\"
+        )))
+
+        harness.write("\(esc)_VTG;frameRejected,id=wrong,reason=idMismatch\(esc)\\")
+        #expect(harness.canvas.readEvent(timeoutMilliseconds: 50) == .frame(VTGFrameEvent(
+            type: "frameRejected",
+            id: "wrong",
+            reason: "idMismatch",
+            rawResponse: "\(esc)_VTG;frameRejected,id=wrong,reason=idMismatch\(esc)\\"
         )))
     }
 
