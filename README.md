@@ -47,7 +47,7 @@ The current Swift implementation wraps:
 - optional stroke styling for supported vector primitives through `VTGLineCap` and `VTGLineJoin`
 - VTG `triangle` with optional rounded corners
 - VTG `path` with constrained absolute `M`, `L`, `Q`, `C`, and `Z` payloads
-- VTG `rect` with optional rounded corners
+- VTG `rect` with optional rounded corners and per-corner selectors
 - VTG `circle`
 - VTG `ellipse`
 - VTG `text`
@@ -114,7 +114,7 @@ This table is the fastest way to see what the SDK emits. `ESC _` starts an APC c
 | `canvas.cubicCurve(..., lineCap:lineJoin:)` | `ESC _ VTG;curve,id=<id>,kind=cubic,...,lineCap=<cap>,lineJoin=<join> ESC \` | Cubic Bezier curve. Stroke style parameters are optional. |
 | `canvas.triangle(..., radius:lineJoin:)` | `ESC _ VTG;triangle,id=<id>,x1=<px>,y1=<px>,x2=<px>,y2=<px>,x3=<px>,y3=<px>,stroke=<color>,fill=<color>,width=<n>,radius=<px>,lineJoin=<join> ESC \` | Filled or stroked sharp/rounded triangle. `radius` and `lineJoin` are optional and omitted when unset. |
 | `canvas.path(..., lineCap:lineJoin:)` | `ESC _ VTG;path,id=<id>,stroke=<color>,fill=<color>,width=<n>,lineCap=<cap>,lineJoin=<join>;M ... ESC \` | Constrained absolute `M`, `L`, `Q`, `C`, `Z` path grammar. Stroke style parameters are optional. |
-| `canvas.rect(..., radius:lineJoin:)` | `ESC _ VTG;rect,id=<id>,x=<px>,y=<px>,w=<px>,h=<px>,stroke=<color>,fill=<color>,width=<n>,radius=<px>,lineJoin=<join> ESC \` | Retained sharp or rounded rectangle. `radius` and `lineJoin` are optional and omitted when unset. |
+| `canvas.rect(..., radius:corners:lineJoin:)` | `ESC _ VTG;rect,id=<id>,x=<px>,y=<px>,w=<px>,h=<px>,stroke=<color>,fill=<color>,width=<n>,radius=<px>,corners=<digits>,lineJoin=<join> ESC \` | Retained sharp or rounded rectangle. `radius`, `corners`, and `lineJoin` are optional and omitted when unset. `corners` uses `1` top-left, `2` top-right, `3` bottom-right, `4` bottom-left; omitted means all corners. |
 | `canvas.circle(...)` | `ESC _ VTG;circle,id=<id>,cx=<px>,cy=<px>,r=<px>,stroke=<color>,fill=<color>,width=<n> ESC \` | Retained circle. |
 | `canvas.ellipse(...)` | `ESC _ VTG;ellipse,id=<id>,cx=<px>,cy=<px>,rx=<px>,ry=<px>,stroke=<color>,fill=<color>,width=<n> ESC \` | Retained ellipse. |
 | `canvas.text(...)` | `ESC _ VTG;text,id=<id>,x=<px>,y=<px>,color=<color>,size=<px>;text ESC \` | Pixel-positioned graphics text. |
@@ -247,7 +247,7 @@ VectorTerminalSession.run(canvas: canvas) { _ in
     canvas.clear()
     canvas.pixel(id: "origin-dot", x: 20, y: 20, color: .green)
     canvas.rect(id: "border", x: 5, y: 5, width: 600, height: 400, stroke: .green)
-    canvas.rect(id: "panel", x: 30, y: 70, width: 220, height: 120, stroke: .cyan, fill: "#07111dcc", radius: 18)
+    canvas.rect(id: "panel", x: 30, y: 70, width: 220, height: 120, stroke: .cyan, fill: "#07111dcc", radius: 18, corners: "12")
     canvas.line(id: "line", x1: 40, y1: 40, x2: 300, y2: 240, stroke: .blue, width: 4)
     canvas.draw(id: "zig", points: [.init(x: 40, y: 80), .init(x: 90, y: 40), .init(x: 140, y: 80)], stroke: .cyan, width: 3)
     canvas.vectorPrint(id: "arcade", x: 40, y: 120, height: 42, value: "GAME OVER", stroke: .green, width: 3)

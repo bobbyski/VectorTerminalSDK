@@ -52,12 +52,13 @@ struct FrameTests {
         let output = CapturingOutput()
         let canvas = VectorTerminalCanvas.hostValidated(output: output)
 
-        canvas.rect(id: "rounded", x: 10, y: 20, width: 30, height: 40, stroke: .green, fill: "#22c55e33", lineWidth: 2, radius: 12)
+        canvas.rect(id: "rounded", x: 10, y: 20, width: 30, height: 40, stroke: .green, fill: "#22c55e33", lineWidth: 2, radius: 12, corners: "12421")
         canvas.rect(id: "sharp", x: 50, y: 60, width: 70, height: 80, stroke: .cyan)
 
-        #expect(output.text.contains("\u{1B}_VTG;rect,id=rounded,x=10,y=20,w=30,h=40,stroke=#22c55e,fill=#22c55e33,width=2,radius=12\u{1B}\\"))
+        #expect(output.text.contains("\u{1B}_VTG;rect,id=rounded,x=10,y=20,w=30,h=40,stroke=#22c55e,fill=#22c55e33,width=2,radius=12,corners=124\u{1B}\\"))
         #expect(output.text.contains("\u{1B}_VTG;rect,id=sharp,x=50,y=60,w=70,h=80,stroke=#5eead4,fill=none,width=1\u{1B}\\"))
         #expect(!output.text.contains("id=sharp,x=50,y=60,w=70,h=80,stroke=#5eead4,width=1,radius"))
+        #expect(!output.text.contains("id=sharp,x=50,y=60,w=70,h=80,stroke=#5eead4,width=1,corners"))
     }
 
     @Test func triangleCommandIncludesOptionalCornerRadius() {
