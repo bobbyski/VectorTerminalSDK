@@ -22,6 +22,35 @@ extension VectorTerminalCanvas {
         return VTGCanvas(width: width, height: height, source: source, rawResponse: response)
     }
 
+    /// Parse the versioned flat VTG capabilities response into a typed value.
+    func parseCapabilities(from response: String) -> VTGCapabilities {
+        let values = vtgFields(from: response)
+        return VTGCapabilities(
+            protocolName: values["protocol"],
+            schema: values["schema"],
+            version: values["version"],
+            renderer: values["renderer"],
+            canvas: parseCapabilitiesCanvas(from: response, source: "capabilities?"),
+            commands: pipeList(values["commands"]),
+            planned: pipeList(values["planned"]),
+            primitives: pipeList(values["primitives"]),
+            underTextPrimitives: pipeList(values["underText"]),
+            formats: pipeList(values["formats"]),
+            raster: pipeList(values["raster"]),
+            sprites: pipeList(values["sprites"]),
+            layers: values["layers"],
+            defaultLayer: values["defaultLayer"].flatMap(Int.init),
+            textPlane: values["textPlane"],
+            layerScroll: values["layerScroll"].map(parseBool),
+            layerAlpha: values["layerAlpha"],
+            clip: values["clip"],
+            hit: values["hit"],
+            events: pipeList(values["events"]),
+            colors: pipeList(values["colors"]),
+            rawResponse: response
+        )
+    }
+
     /// Parse comma-separated VTG APC fields while stripping the APC envelope.
     ///
     /// Query and event responses arrive as complete strings such as
@@ -47,5 +76,20 @@ extension VectorTerminalCanvas {
             }
             return (String(pair[0]), String(pair[1]))
         })
+    }
+
+    private func pipeList(_ value: String?) -> [String] {
+        value?
+            .split(separator: "|")
+            .map(String.init) ?? []
+    }
+
+    private func parseBool(_ value: String) -> Bool {
+        switch value.lowercased() {
+        case "1", "true", "yes", "on":
+            return true
+        default:
+            return false
+        }
     }
 }

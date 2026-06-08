@@ -26,6 +26,7 @@ The SDK source is split by responsibility so protocol growth does not turn into 
 - `VectorTerminalCanvas+Sprites.swift`: VTG sprite asset upload, retained sprite placement, and sprite transforms.
 - `VectorTerminalCanvas+Frames.swift`: graphics-only offscreen frame helpers.
 - `VectorTerminalCanvas+Queries.swift`: VTG capabilities, canvas, size, resize subscriptions, and terminal cell-size queries.
+- `VTGCapabilities.swift`: typed parsing target for `capabilities?`, including the native under-text primitive subset.
 - `VectorTerminalCanvas+Events.swift`: synchronous and async keyboard, mouse, resize, and canvas event parsing.
 - `VectorTerminalCanvas+ANSI.swift`: standard ANSI screen, cursor, color, text-attribute, mouse, paste, and focus helpers.
 - `VTGOutput.swift`: stdout/file-handle and closure-backed output transports.
@@ -52,7 +53,7 @@ The current Swift implementation wraps:
 - VTG `ellipse`
 - VTG `text`
 - VTG `image` for retained PNG/JPEG placement
-- VTG `capabilities?`
+- VTG `capabilities?` as raw text and as typed `VTGCapabilities`
 - VTG `canvas?`
 - VTG `size?` through `querySize(...)` and as a fallback through `queryCurrentCanvas(...)`
 - resize event enable/disable commands
@@ -64,8 +65,8 @@ The current Swift implementation wraps:
 - `VectorTerminalSession` for scoped alternate screen, cursor, resize, mouse, raw-input, and cleanup management
 - typed arrow-key events for `up`, `down`, `left`, and `right`
 - terminal character-cell size queries with `queryTerminalCellSize()`
-- small retained bitmap or vector sprites that can be uploaded once, moved, rotated, anchored, and scaled without resending payload data
-- named VTG layer constants through `VTGLayer.textPlane`, `VTGLayer.defaultOverlay`, and `VTGLayer.overlay1...overlay4`
+- small retained bitmap, indexed, or vector sprites that can be uploaded once, moved, rotated, anchored, and scaled without resending payload data
+- named VTG layer constants through `VTGLayer.underText`, `VTGLayer.textPlane`, `VTGLayer.defaultOverlay`, and `VTGLayer.overlay1...overlay4`
 - a `canvas.defaultLayer` property plus `setDefaultLayer(_:)` for changing the terminal-side retained drawing default
 - retained-object layer reassignment with `setLayer(id:layer:)`
 - overlay layer opacity with `setLayerAlpha(_:alpha:)`
@@ -86,6 +87,7 @@ This table is the fastest way to see what the SDK emits. `ESC _` starts an APC c
 | SDK call | Raw VTG sequence shape | Notes |
 |---|---|---|
 | `canvas.queryCapabilities(...)` | `ESC _ VTG;capabilities? ESC \` | Reads the raw capabilities response. |
+| `canvas.queryCapabilityInfo(...)` | `ESC _ VTG;capabilities? ESC \` | Parses the response into `VTGCapabilities`, including `underTextPrimitives`. |
 | `canvas.queryCanvas(...)` | `ESC _ VTG;canvas? ESC \` | Preferred direct pixel-canvas query. |
 | `canvas.querySize(...)` | `ESC _ VTG;size? ESC \` | Legacy compatibility pixel-canvas query. |
 | `canvas.queryCurrentCanvas(...)` | `canvas?`, then `size?`, then `capabilities?` | Best app-facing size query. |
@@ -96,16 +98,16 @@ This table is the fastest way to see what the SDK emits. `ESC _` starts an APC c
 | `canvas.clear()` | `ESC _ VTG;clear ESC \` | Clears retained VTG scene state. |
 | `canvas.present()` | `ESC _ VTG;present ESC \` | Presentation hint for the current retained scene. |
 | `canvas.delete(id:)` | `ESC _ VTG;delete,id=<id> ESC \` | Removes one retained primitive by id. |
-| `canvas.setDefaultLayer(_:)` / `canvas.defaultLayer = ...` | `ESC _ VTG;defaultLayer,layer=<0-4> ESC \` | Changes the implicit layer for later retained drawing calls. |
-| `canvas.setLayer(id:layer:)` | `ESC _ VTG;layer,id=<object-id>,layer=<0-4> ESC \` | Moves an existing retained object between layers. |
+| `canvas.setDefaultLayer(_:)` / `canvas.defaultLayer = ...` | `ESC _ VTG;defaultLayer,layer=<-1-4> ESC \` | Changes the implicit layer for later retained drawing calls. |
+| `canvas.setLayer(id:layer:)` | `ESC _ VTG;layer,id=<object-id>,layer=<-1-4> ESC \` | Moves an existing retained object between layers. |
 | `canvas.scrollLayer(_:x:y:)` | `ESC _ VTG;layerScroll,layer=<1-4>,x=<px>,y=<px> ESC \` | Scrolls an overlay layer without changing object coordinates. |
-| `canvas.setLayerAlpha(_:alpha:)` | `ESC _ VTG;layerAlpha,layer=<1-4>,alpha=<0-1> ESC \` | Fades a whole overlay layer. Layer 0 is excluded. |
-| `canvas.clipLayer(_:x:y:width:height:)` | `ESC _ VTG;clip,layer=<0-4>,x=<px>,y=<px>,w=<px>,h=<px> ESC \` | Rectangular layer clip. |
-| `canvas.clearLayerClip(_:)` | `ESC _ VTG;clipClear,layer=<0-4> ESC \` | Clears a rectangular layer clip. |
+| `canvas.setLayerAlpha(_:alpha:)` | `ESC _ VTG;layerAlpha,layer=<1-4>,alpha=<0-1> ESC \` | Fades a whole overlay layer. Layers -1 and 0 are excluded. |
+| `canvas.clipLayer(_:x:y:width:height:)` | `ESC _ VTG;clip,layer=<-1-4>,x=<px>,y=<px>,w=<px>,h=<px> ESC \` | Rectangular layer clip. |
+| `canvas.clearLayerClip(_:)` | `ESC _ VTG;clipClear,layer=<-1-4> ESC \` | Clears a rectangular layer clip. |
 | `canvas.setViewportMode(layer:width:height:scale:)` | `ESC _ VTG;viewportMode,layer=<1-4>,width=<px>,height=<px>,scale=<mode> ESC \` | Fixed-resolution overlay coordinates. |
 | `canvas.clearViewportMode(layer:)` | `ESC _ VTG;viewportMode,layer=<1-4>,value=native ESC \` | Restores native canvas coordinates. |
 | `canvas.setViewportScale(layer:scale:x:y:)` | `ESC _ VTG;viewportScale,layer=<1-4>,scale=<n>,x=<px>,y=<px> ESC \` | Explicit fixed-viewport placement. |
-| `canvas.hitRegion(id:x:y:width:height:layer:target:)` | `ESC _ VTG;hit,id=<id>,x=<px>,y=<px>,w=<px>,h=<px>,layer=<0-4>,target=<id> ESC \` | Registers a rectangular hit region. |
+| `canvas.hitRegion(id:x:y:width:height:layer:target:)` | `ESC _ VTG;hit,id=<id>,x=<px>,y=<px>,w=<px>,h=<px>,layer=<-1-4>,target=<id> ESC \` | Registers a rectangular hit region. |
 | `canvas.clearHitRegions(id:layer:)` | `ESC _ VTG;hitClear,id=<id> ESC \`, `ESC _ VTG;hitClear,layer=<n> ESC \`, or `ESC _ VTG;hitClear ESC \` | Clears one, one layer, or all hit regions. |
 | `canvas.pixel(...)` | `ESC _ VTG;pixel,id=<id>,x=<px>,y=<px>,color=<color> ESC \` | Single retained pixel. |
 | `canvas.line(..., lineCap:)` | `ESC _ VTG;line,id=<id>,x1=<px>,y1=<px>,x2=<px>,y2=<px>,stroke=<color>,width=<n>,lineCap=<cap> ESC \` | Retained line segment. `lineCap` is optional. |
@@ -118,9 +120,10 @@ This table is the fastest way to see what the SDK emits. `ESC _` starts an APC c
 | `canvas.circle(...)` | `ESC _ VTG;circle,id=<id>,cx=<px>,cy=<px>,r=<px>,stroke=<color>,fill=<color>,width=<n> ESC \` | Retained circle. |
 | `canvas.ellipse(...)` | `ESC _ VTG;ellipse,id=<id>,cx=<px>,cy=<px>,rx=<px>,ry=<px>,stroke=<color>,fill=<color>,width=<n> ESC \` | Retained ellipse. |
 | `canvas.text(...)` | `ESC _ VTG;text,id=<id>,x=<px>,y=<px>,color=<color>,size=<px>;text ESC \` | Pixel-positioned graphics text. |
-| `canvas.image(...pngData:)` / `canvas.image(...jpegData:)` | `ESC _ VTG;image,id=<id>,format=<png/jpeg>,x=<px>,y=<px>,width=<px>,height=<px>;base64 ESC \` | Uploads and places one retained raster image. |
-| `canvas.uploadSprite(...)` | `ESC _ VTG;spriteUpload,id=<asset-id>,format=<png/jpeg>,width=<px>,height=<px>;base64 ESC \` | Uploads or replaces a cached sprite asset. |
+| `canvas.image(...pngData:, filter:)` / `canvas.image(...jpegData:, filter:)` | `ESC _ VTG;image,id=<id>,format=<png/jpeg>,x=<px>,y=<px>,width=<px>,height=<px>,filter=<smooth/nearest>;base64 ESC \` | Uploads and places one retained raster image with optional smoothing or crisp pixel-art sampling. |
+| `canvas.uploadSprite(..., filter: .smooth/.nearest)` | `ESC _ VTG;spriteUpload,id=<asset-id>,format=<png/jpeg>,width=<px>,height=<px>,filter=<smooth/nearest>;base64 ESC \` | Uploads or replaces a cached sprite asset, with optional smoothing or crisp pixel-art sampling. |
 | `canvas.uploadVectorSprite(...)` | `ESC _ VTG;vectorSpriteUpload,id=<asset-id>,width=<px>,height=<px>,stroke=<color>,fill=<color>,lineWidth=<n>;path ESC \` | Uploads one constrained-path vector sprite asset. |
+| `canvas.uploadSprite(...pixels:palette:, filter: .nearest)` / `canvas.uploadIndexedSprite(...)` | `ESC _ VTG;spriteDataUpload,id=<asset-id>,width=<px>,height=<px>,palette=<color>|<color>,transparent=<index>,filter=<smooth/nearest>;0,1,2,... ESC \` | Uploads a palette-indexed sprite from a numeric array for retro BASIC-style clients. |
 | `canvas.sprite(...)` | `ESC _ VTG;sprite,id=<id>,image=<asset-id>,x=<px>,y=<px>,rotation=<deg>,scale=<n>,anchorX=<0-1>,anchorY=<0-1> ESC \` | Places or replaces a retained sprite instance. |
 | `canvas.moveSprite(...)` | `ESC _ VTG;spriteMove,id=<id>,x=<px>,y=<px> ESC \` | Moves a sprite instance. |
 | `canvas.rotateSprite(...)` | `ESC _ VTG;spriteRotate,id=<id>,rotation=<deg> ESC \` | Rotates a sprite instance. |
@@ -172,7 +175,7 @@ These helpers emit traditional terminal control sequences and continue to work e
 
 `VTGShowcase` teaches the protocol as it runs. It draws examples of VTG drawing commands, with the friendly SDK call shown beside or below the graphic and the raw escape sequence shown underneath.
 
-The current version covers `pixel`, `line`, `draw`, `rect`, `circle`, `ellipse`, `text`, `vectorPrint`, `curve`, `triangle`, bitmap image upload, bitmap sprite move/rotate examples, first-pass vector sprites backed by constrained path payloads, layers, clipping, hit regions, and a playable tic-tac-toe tab.
+The current version covers `pixel`, `line`, `draw`, `rect`, `circle`, `ellipse`, `text`, `vectorPrint`, `curve`, `triangle`, bitmap image upload, bitmap sprite move/rotate examples, first-pass vector sprites backed by constrained path payloads, palette-indexed numeric sprites for retro BASIC-style clients, layers, clipping, hit regions, and a playable tic-tac-toe tab.
 
 The point of this demo is documentation by inspection: users should be able to run it, see the rendered result, see the Swift SDK call that produced it, and see the exact escape sequence that would produce the same command without the SDK.
 
@@ -229,9 +232,13 @@ Important fields:
 - `protocol=VTG`: identifies the graphics protocol.
 - `schema=vtg.capabilities.v1`: identifies the shape of the capability response.
 - `version=0.1`: identifies the VTG wire command version.
+- `renderer=metal|coreGraphics|svg|overlay`: identifies the host terminal view's active renderer. The SDK exposes it as a string so clients can observe future renderer names without waiting for a package update.
 - `commands=...`: pipe-separated implemented command names.
 - `planned=...`: pipe-separated documented command names that are not yet implemented.
-- `events=mouse|resize`: host-published event streams.
+- `raster=image|filter`: retained raster image features.
+- `sprites=bitmap|indexed|vector|move|rotate|scale|filter`: sprite asset and instance features.
+- `textPlane=reserved`: layer `0` exists in the protocol model but is not yet a finished shared text/graphics feature contract.
+- `events=mouse|resize|frame`: host-published event streams.
 
 Older SDK code can continue checking only for `_VTG;capabilities`. Newer clients should prefer `schema` and `commands` when choosing optional features.
 
@@ -287,8 +294,8 @@ The SDK should eventually provide:
 - A polyline `draw(...)` primitive for batching connected line segments into one VTG command.
 - Bezier curve primitives in the core canvas API, shaped as `quadraticCurve(...)` and `cubicCurve(...)` helpers over one VTG `curve` escape sequence.
 - Filled polygon basics start with sharp/rounded `triangle(...)`, with constrained `path(...)` support for absolute `M`, `L`, `Q`, `C`, and `Z` path payloads.
-- Raster image placement starts with retained PNG/JPEG `image(...)` uploads. Small bitmap sprite helpers support upload/place/move/rotate/anchor/scale for icons, cursors, simple game objects, and other tiny raster assets where vector primitives would be awkward. Vector sprite helpers now upload one constrained path payload as a reusable sprite asset and use the same placement, normalized anchor, and transform model as bitmap sprites.
-- Layer support starts with named constants in `VTGLayer`, `canvas.defaultLayer`, `setDefaultLayer(_:)`, `setLayer(id:layer:)`, `scrollLayer(_:x:y:)`, `setLayerAlpha(_:alpha:)`, `clipLayer(_:x:y:width:height:)`, `clearLayerClip(_:)`, `delete(id:)`, and optional `layer:` parameters on drawing helpers. The current terminal prototype orders overlay primitives by layer `0...4`, supports independent scroll offsets and opacity for layers `1...4`, and supports rectangular layer clips; true layer 0 text/graphics mingling, object-level clips, and non-rectangular clipping are planned for later renderer work.
+- Raster image placement starts with retained PNG/JPEG `image(...)` uploads and optional `smooth`/`nearest` filtering. Small bitmap sprite helpers support upload/place/move/rotate/anchor/scale for icons, cursors, simple game objects, and other tiny raster assets where vector primitives would be awkward. Vector sprite helpers now upload one constrained path payload as a reusable sprite asset and use the same placement, normalized anchor, and transform model as bitmap sprites. Palette-indexed sprite helpers upload a numeric pixel array plus a color palette, which keeps retro BASIC demos compact while still reusing the same retained sprite placement and transform commands.
+- Layer support starts with named constants in `VTGLayer`, `canvas.defaultLayer`, `setDefaultLayer(_:)`, `setLayer(id:layer:)`, `scrollLayer(_:x:y:)`, `setLayerAlpha(_:alpha:)`, `clipLayer(_:x:y:width:height:)`, `clearLayerClip(_:)`, `delete(id:)`, and optional `layer:` parameters on drawing helpers. The current terminal prototype orders primitives by layer `-1...4`: layer `-1` is an under-text graphics plane, layer `0` is reserved for true text/graphics mingling, and layers `1...4` are ordered overlays. Independent scroll offsets and opacity apply to layers `1...4`; rectangular clips are supported across the graphics layers. Object-level clips and non-rectangular clipping are planned for later renderer work.
 - Fixed-resolution compatibility starts with `setViewportMode(layer:width:height:scale:)`, `setViewportScale(layer:scale:x:y:)`, and `clearViewportMode(layer:)`. The scene stores this state for overlay layers only, and the macOS overlay renderer scales those layers with `fit`, `fill`, `integer`, or `stretch` behavior. Mouse events include `viewportLayer`, `virtualX`, and `virtualY` when the physical event lands inside a fixed-resolution viewport.
 - Hit regions start with rectangular `hitRegion(...)` registration and `clearHitRegions(...)`. VTG mouse events include `hitID` and optional `targetID` when a click, drag, raw mouse, or scroll event lands inside the topmost matching region.
 - Graphics-only offscreen frames start with `startFrame`, `endFrame`, `cancelFrame`, and `withFrame`. This first pass buffers VTG drawing commands into a pending retained scene while ANSI text remains visible. Full ANSI transactional rendering is a later renderer phase.

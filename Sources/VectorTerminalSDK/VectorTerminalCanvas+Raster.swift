@@ -13,9 +13,10 @@ extension VectorTerminalCanvas {
         width: Int,
         height: Int,
         pngData: Data,
+        filter: VTGSpriteFilter = .smooth,
         layer: Int? = nil
     ) {
-        send("image,id=\(id),format=png,x=\(x),y=\(y),width=\(width),height=\(height)\(layerParameter(layer))", payload: pngData.base64EncodedString())
+        send("image,id=\(id),format=png,x=\(x),y=\(y),width=\(width),height=\(height),filter=\(filter.rawValue)\(layerParameter(layer))", payload: pngData.base64EncodedString())
     }
 
     /// Upload and place a retained JPEG image.
@@ -26,8 +27,9 @@ extension VectorTerminalCanvas {
         width: Int,
         height: Int,
         jpegData: Data,
+        filter: VTGSpriteFilter = .smooth,
         layer: Int? = nil
     ) {
-        send("image,id=\(id),format=jpeg,x=\(x),y=\(y),width=\(width),height=\(height)\(layerParameter(layer))", payload: jpegData.base64EncodedString())
+        send("image,id=\(id),format=jpeg,x=\(x),y=\(y),width=\(width),height=\(height),filter=\(filter.rawValue)\(layerParameter(layer))", payload: jpegData.base64EncodedString())
     }
 }

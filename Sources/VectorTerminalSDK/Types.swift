@@ -37,11 +37,13 @@ public struct TerminalCellSize: Equatable {
 
 /// Named layer values for VTG drawing commands.
 ///
-/// Layer 0 is reserved for the future shared text/graphics plane. Layers 1-4
-/// are the current overlay layers, with layer 1 as the default. These constants
-/// intentionally remain `Int` values so they can be passed directly to existing
-/// SDK methods that accept `layer: Int?`.
+/// Layer -1 is the under-text graphics plane. Layer 0 is reserved for the
+/// future shared text/graphics plane. Layers 1-4 are the current overlay layers,
+/// with layer 1 as the default. These constants intentionally remain `Int`
+/// values so they can be passed directly to existing SDK methods that accept
+/// `layer: Int?`.
 public enum VTGLayer {
+    public static let underText = -1
     public static let textPlane = 0
     public static let defaultOverlay = 1
     public static let overlay1 = 1
@@ -49,9 +51,9 @@ public enum VTGLayer {
     public static let overlay3 = 3
     public static let overlay4 = 4
 
-    public static let supportedRange = textPlane...overlay4
+    public static let supportedRange = underText...overlay4
     public static let overlayRange = overlay1...overlay4
-    public static let advertisedRange = "\(textPlane)-\(overlay4)"
+    public static let advertisedRange = "\(underText)-\(overlay4)"
 
     /// Clamp arbitrary user input into the VTG layer range.
     public static func clamped(_ layer: Int) -> Int {
@@ -79,6 +81,15 @@ public enum VTGViewportScaleMode: String {
     case fill
     case integer
     case stretch
+}
+
+/// Sampling hint for uploaded raster sprite assets.
+public enum VTGSpriteFilter: String {
+    /// Preserve image-like smoothing when scaling sprites.
+    case smooth
+
+    /// Prefer crisp nearest-neighbor sampling for pixel art.
+    case nearest
 }
 
 /// Errors thrown by SDK initialization.
