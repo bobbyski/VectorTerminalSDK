@@ -27,6 +27,8 @@ struct CapabilityParsingTests {
         #expect(capabilities?.layers == "-1-4")
         #expect(capabilities?.defaultLayer == 1)
         #expect(capabilities?.textPlane == "reserved")
+        #expect(capabilities?.textPlaneStatus == .reserved)
+        #expect(capabilities?.textPlaneStatus.isReserved == true)
         #expect(capabilities?.layerScroll == true)
         #expect(capabilities?.layerAlpha == "1-4")
         #expect(capabilities?.clip == "layer-rect")
@@ -34,5 +36,14 @@ struct CapabilityParsingTests {
         #expect(capabilities?.events == ["mouse", "resize", "frame"])
         #expect(capabilities?.colors == ["hex-rgb", "hex-rgba"])
         #expect(harness.output().contains("\(esc)_VTG;capabilities?\(esc)\\"))
+    }
+
+    @Test func textPlaneStatusPreservesFutureValues() {
+        #expect(VTGTextPlaneStatus("reserved") == .reserved)
+        #expect(VTGTextPlaneStatus("RESERVED") == .reserved)
+        #expect(VTGTextPlaneStatus("vector-v1") == .other("vector-v1"))
+        #expect(VTGTextPlaneStatus(nil) == .other(""))
+        #expect(VTGTextPlaneStatus("vector-v1").rawValue == "vector-v1")
+        #expect(!VTGTextPlaneStatus("vector-v1").isReserved)
     }
 }

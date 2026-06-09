@@ -1,5 +1,45 @@
 import Foundation
 
+/// Public status advertised for VTG layer `0`.
+///
+/// Layer `0` is accepted by the wire protocol today, but `reserved` tells
+/// applications not to treat it as a stable shared text/graphics plane yet.
+public enum VTGTextPlaneStatus: Equatable {
+    /// The terminal accepts layer `0`, but app-facing text-plane semantics are
+    /// not finalized.
+    case reserved
+
+    /// A future terminal may advertise a named app-facing text-plane feature
+    /// set. Unknown values are preserved so new terminals can be observed by
+    /// older SDK builds.
+    case other(String)
+
+    public init(_ rawValue: String?) {
+        switch rawValue?.lowercased() {
+        case "reserved":
+            self = .reserved
+        case .some(let value):
+            self = .other(value)
+        case .none:
+            self = .other("")
+        }
+    }
+
+    public var rawValue: String {
+        switch self {
+        case .reserved:
+            return "reserved"
+        case .other(let value):
+            return value
+        }
+    }
+
+    /// Whether applications should avoid depending on layer `0` semantics.
+    public var isReserved: Bool {
+        self == .reserved
+    }
+}
+
 /// Parsed VTG capability response.
 ///
 /// `primitives` describes the broad retained-scene drawing surface. The
@@ -21,6 +61,9 @@ public struct VTGCapabilities: Equatable {
     public var layers: String?
     public var defaultLayer: Int?
     public var textPlane: String?
+    public var textPlaneStatus: VTGTextPlaneStatus {
+        VTGTextPlaneStatus(textPlane)
+    }
     public var layerScroll: Bool?
     public var layerAlpha: String?
     public var clip: String?
