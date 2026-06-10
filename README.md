@@ -9,6 +9,8 @@ This package is intentionally early. It exists so the project can eventually shi
 - A raw VTG example that shows the protocol directly.
 - An SDK example that shows the friendlier Swift API.
 
+For the full method-by-method API reference, see [API.md](API.md).
+
 ## Requirements
 
 - macOS 16.0 or newer.

@@ -46,30 +46,74 @@ public enum VTGTextPlaneStatus: Equatable {
 /// narrower `underTextPrimitives` set describes which primitives are native on
 /// layer `-1` beneath terminal glyphs.
 public struct VTGCapabilities: Equatable {
+    /// Protocol name advertised by the terminal, normally `VTG`.
     public var protocolName: String?
+
+    /// Capability schema identifier, such as `vtg.capabilities.v1`.
     public var schema: String?
+
+    /// VTG protocol implementation version.
     public var version: String?
+
+    /// Renderer backend name reported by the terminal.
     public var renderer: String?
+
+    /// Pixel canvas dimensions embedded in the capabilities response.
     public var canvas: VTGCanvas?
+
+    /// Command names advertised as implemented by the terminal.
     public var commands: [String]
+
+    /// Command names advertised as planned but not yet implemented.
     public var planned: [String]
+
+    /// Graphics primitive categories supported by the retained VTG scene.
     public var primitives: [String]
+
+    /// Primitive categories that can render on layer `-1` beneath text.
     public var underTextPrimitives: [String]
+
+    /// Raster image payload formats accepted by the terminal.
     public var formats: [String]
+
+    /// Raster image feature tokens advertised by the terminal.
     public var raster: [String]
+
+    /// Sprite feature tokens advertised by the terminal.
     public var sprites: [String]
+
+    /// Human-readable supported layer range, such as `-1-4`.
     public var layers: String?
+
+    /// Default drawing layer advertised by the terminal.
     public var defaultLayer: Int?
+
+    /// Raw text-plane status value advertised for layer `0`.
     public var textPlane: String?
+
     public var textPlaneStatus: VTGTextPlaneStatus {
         VTGTextPlaneStatus(textPlane)
     }
+
+    /// Whether layer scrolling is advertised.
     public var layerScroll: Bool?
+
+    /// Layer-alpha support descriptor, typically `1-4`.
     public var layerAlpha: String?
+
+    /// Layer clipping support descriptor.
     public var clip: String?
+
+    /// Hit-region support descriptor.
     public var hit: String?
+
+    /// Event categories advertised by the terminal.
     public var events: [String]
+
+    /// Color formats accepted by drawing commands.
     public var colors: [String]
+
+    /// Raw capabilities response for diagnostics and forward compatibility.
     public var rawResponse: String
 
     public init(

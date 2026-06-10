@@ -5,21 +5,52 @@ import Foundation
 /// `x` and `y` are pixel coordinates when VTG-native mouse reporting is active.
 /// `cellX` and `cellY` are terminal-cell coordinates when supplied by the host.
 public struct VTGMouseEvent: Equatable {
+    /// Mouse X coordinate in VTG pixel space.
     public var x: Int
+
+    /// Mouse Y coordinate in VTG pixel space.
     public var y: Int
+
+    /// One-based terminal cell column, when supplied by the terminal.
     public var cellX: Int?
+
+    /// One-based terminal cell row, when supplied by the terminal.
     public var cellY: Int?
+
+    /// True for press-style events, false for release-style events.
     public var isPress: Bool
+
+    /// Mouse button number reported by the terminal.
     public var button: Int
+
+    /// Event type, such as `down`, `up`, `click`, `drag`, or `scroll`.
     public var type: String
+
+    /// Modifier summary string reported by the terminal.
     public var modifiers: String
+
+    /// Horizontal scroll delta for scroll events, when present.
     public var scrollX: Int?
+
+    /// Vertical scroll delta for scroll events, when present.
     public var scrollY: Int?
+
+    /// Hit-region id matched by the terminal, when present.
     public var hitID: String?
+
+    /// App-facing target id attached to the matched hit region, when present.
     public var targetID: String?
+
+    /// Fixed-viewport layer used to compute virtual coordinates, when present.
     public var viewportLayer: Int?
+
+    /// Mouse X coordinate in fixed-viewport virtual space, when present.
     public var virtualX: Int?
+
+    /// Mouse Y coordinate in fixed-viewport virtual space, when present.
     public var virtualY: Int?
+
+    /// Raw VTG or ANSI escape sequence used to produce the event.
     public var rawSequence: String
 
     public init(
