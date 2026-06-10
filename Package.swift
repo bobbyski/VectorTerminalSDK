@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "VectorTerminalSDK",
     platforms: [
-        .macOS(.v13)
+        .macOS("16.0")
     ],
     products: [
         .library(name: "VectorTerminalSDK", targets: ["VectorTerminalSDK"]),
@@ -20,6 +20,11 @@ let package = Package(
             name: "VectorTerminalSDKDemo",
             dependencies: ["VectorTerminalSDK"],
             path: "Sources/VectorTerminalSDKDemo"
+        ),
+        .testTarget(
+            name: "VectorTerminalSDKTests",
+            dependencies: ["VectorTerminalSDK"],
+            path: "Tests/VectorTerminalSDKTests"
         )
     ]
 )
