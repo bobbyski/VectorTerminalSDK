@@ -62,6 +62,7 @@ The current Swift implementation wraps:
 - common ANSI screen, cursor, color, text-attribute, mouse, paste, and focus controls
 - `setCursor(row:column:)` convenience alias for absolute ANSI cursor positioning
 - `vectorPrint(id:x:y:height:value:stroke:width:)` for ASCII-subset vector text built on `draw`
+- `vectorTextSize(height:value:)` for measuring the pixel advance consumed by SDK vector text
 - async VTG-native mouse events with pixel coordinates, terminal cell coordinates, optional fixed-viewport virtual coordinates, mouse button, raw down/up, debounced click, drag, and scroll wheel data
 - synchronous event polling with `readEvent(timeoutMilliseconds:)`
 - `VectorTerminalSession` for scoped alternate screen, cursor, resize, mouse, raw-input, and cleanup management
@@ -112,6 +113,7 @@ This table is the fastest way to see what the SDK emits. `ESC _` starts an APC c
 | `canvas.hitRegion(id:x:y:width:height:layer:target:)` | `ESC _ VTG;hit,id=<id>,x=<px>,y=<px>,w=<px>,h=<px>,layer=<-1-4>,target=<id> ESC \` | Registers a rectangular hit region. |
 | `canvas.clearHitRegions(id:layer:)` | `ESC _ VTG;hitClear,id=<id> ESC \`, `ESC _ VTG;hitClear,layer=<n> ESC \`, or `ESC _ VTG;hitClear ESC \` | Clears one, one layer, or all hit regions. |
 | `canvas.pixel(...)` | `ESC _ VTG;pixel,id=<id>,x=<px>,y=<px>,color=<color> ESC \` | Single retained pixel. |
+| `canvas.clearRect(...)` | `ESC _ VTG;clearRect,id=<id>,x=<px>,y=<px>,w=<px>,h=<px> ESC \` | Retained transparent clear rectangle for overlay layers. This erases earlier overlay graphics in the same compositing plane; it is not a background-colored fill. |
 | `canvas.line(..., lineCap:)` | `ESC _ VTG;line,id=<id>,x1=<px>,y1=<px>,x2=<px>,y2=<px>,stroke=<color>,width=<n>,lineCap=<cap> ESC \` | Retained line segment. `lineCap` is optional. |
 | `canvas.draw(..., lineCap:lineJoin:)` | `ESC _ VTG;draw,id=<id>,stroke=<color>,width=<n>,lineCap=<cap>,lineJoin=<join>;x,y x,y ... ESC \` | Retained polyline. Stroke style parameters are optional. |
 | `canvas.quadraticCurve(..., lineCap:lineJoin:)` | `ESC _ VTG;curve,id=<id>,kind=quadratic,...,lineCap=<cap>,lineJoin=<join> ESC \` | Quadratic Bezier curve. Stroke style parameters are optional. |
@@ -134,6 +136,7 @@ This table is the fastest way to see what the SDK emits. `ESC _` starts an APC c
 | `canvas.removeSprite(id:)` | `ESC _ VTG;spriteRemove,id=<asset-id> ESC \` | Removes an uploaded sprite asset and dependent instances. |
 | `canvas.clearSprites()` | `ESC _ VTG;spriteClear ESC \` | Removes all uploaded sprite assets and sprite instances. |
 | `canvas.vectorPrint(...)` | many `ESC _ VTG;draw,... ESC \` calls | SDK convenience; not a separate VTG command. |
+| `VectorTerminalCanvas.vectorTextSize(...)` / `canvas.vectorTextSize(...)` | none | SDK-only layout helper matching `vectorPrint(...)` advance math. |
 | `canvas.startFrame(id:timeoutMilliseconds:)` | `ESC _ VTG;startFrame,id=<id>,timeout=<ms> ESC \` | Starts graphics-only offscreen buffering. |
 | `canvas.endFrame(id:)` | `ESC _ VTG;endFrame,id=<id> ESC \` | Commits a pending graphics frame. |
 | `canvas.cancelFrame(id:)` | `ESC _ VTG;cancelFrame,id=<id> ESC \` | Discards a pending graphics frame. |
@@ -177,7 +180,7 @@ These helpers emit traditional terminal control sequences and continue to work e
 
 `VTGShowcase` teaches the protocol as it runs. It draws examples of VTG drawing commands, with the friendly SDK call shown beside or below the graphic and the raw escape sequence shown underneath.
 
-The current version covers `pixel`, `line`, `draw`, `rect`, `circle`, `ellipse`, `text`, `vectorPrint`, `curve`, `triangle`, bitmap image upload, bitmap sprite move/rotate examples, first-pass vector sprites backed by constrained path payloads, palette-indexed numeric sprites for retro BASIC-style clients, layers, clipping, hit regions, and a playable tic-tac-toe tab.
+The current version covers `pixel`, `clearRect`, `line`, `draw`, `rect`, `circle`, `ellipse`, `text`, `vectorPrint`, `curve`, `triangle`, bitmap image upload, bitmap sprite move/rotate examples, first-pass vector sprites backed by constrained path payloads, palette-indexed numeric sprites for retro BASIC-style clients, layers, clipping, hit regions, and a playable tic-tac-toe tab.
 
 The point of this demo is documentation by inspection: users should be able to run it, see the rendered result, see the Swift SDK call that produced it, and see the exact escape sequence that would produce the same command without the SDK.
 
@@ -226,14 +229,14 @@ ESC _ VTG;mouse,type=scroll,button=5,x=412,y=318,cellX=42,cellY=17,scrollX=0,scr
 `capabilities?` advertises a versioned flat schema while preserving older fields:
 
 ```text
-ESC _ VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=1.1.0,... ESC \
+ESC _ VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=1.1.2,... ESC \
 ```
 
 Important fields:
 
 - `protocol=VTG`: identifies the graphics protocol.
 - `schema=vtg.capabilities.v1`: identifies the shape of the capability response.
-- `version=1.1.0`: identifies the VTG wire command version.
+- `version=1.1.2`: identifies the VTG wire command version.
 - `renderer=metal|coreGraphics|svg|overlay`: identifies the host terminal view's active renderer. The SDK exposes it as a string so clients can observe future renderer names without waiting for a package update.
 - `commands=...`: pipe-separated implemented command names.
 - `planned=...`: pipe-separated documented command names that are not yet implemented.

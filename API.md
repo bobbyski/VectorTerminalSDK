@@ -1,6 +1,6 @@
 # VectorTerminalSDK API Reference
 
-Version: `1.1.0`
+Version: `1.1.2`
 
 VectorTerminalSDK is a Swift wrapper around VectorTerminal Graphics (VTG) plus the ANSI helpers needed to run graphical terminal apps safely. The SDK is deliberately low-level: drawing methods map closely to VTG escape sequences, while session, event, and output helpers remove the repetitive terminal plumbing.
 
@@ -250,7 +250,27 @@ public func vectorPrint(
 
 Draws ASCII-subset vector text using VTG polyline commands. Unsupported control characters render as a square with their numeric code.
 
+```swift
+public static func vectorTextSize(height: Int, value: String) -> VTGTextSize
+public func vectorTextSize(height: Int, value: String) -> VTGTextSize
+```
+
+Measures the pixel advance consumed by `vectorPrint(...)` for a string at the requested glyph height. Use the static form when no canvas exists yet, or the instance form when laying out near existing drawing calls.
+
 ## Enclosed Shapes
+
+```swift
+public func clearRect(
+    id: String,
+    x: Int,
+    y: Int,
+    width: Int,
+    height: Int,
+    layer: Int? = nil
+)
+```
+
+Clears a retained rectangular overlay graphics region back to transparent pixels. This is different from drawing a background-colored rectangle: earlier overlay graphics in the same compositing plane are erased inside the rectangle, while later primitives can still draw over it. Native under-text/text-plane clearing is intentionally deferred until shared-plane compositing is complete.
 
 ```swift
 public func triangle(
@@ -670,6 +690,7 @@ public struct VTGColor: Equatable, ExpressibleByStringLiteral
 public struct VTGPoint: Equatable
 public struct VTGCanvas: Equatable
 public struct TerminalCellSize: Equatable
+public struct VTGTextSize: Equatable
 public enum VTGLineCap: String
 public enum VTGLineJoin: String
 public enum VTGSpriteFilter: String
@@ -736,4 +757,3 @@ do {
     print("VectorTerminal graphics unavailable; running text fallback.")
 }
 ```
-

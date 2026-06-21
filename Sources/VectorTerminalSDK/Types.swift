@@ -45,6 +45,24 @@ public struct TerminalCellSize: Equatable {
     }
 }
 
+/// Pixel dimensions for SDK-rendered vector text.
+///
+/// `width` is the horizontal advance consumed by a string. `height` is the
+/// requested glyph height passed to `vectorPrint(...)`, clamped to the same
+/// minimum scale used by rendering.
+public struct VTGTextSize: Equatable {
+    /// Width in VTG pixels.
+    public var width: Int
+
+    /// Height in VTG pixels.
+    public var height: Int
+
+    public init(width: Int, height: Int) {
+        self.width = width
+        self.height = height
+    }
+}
+
 /// Named layer values for VTG drawing commands.
 ///
 /// Layer -1 is the under-text graphics plane. Layer 0 is reserved for the
