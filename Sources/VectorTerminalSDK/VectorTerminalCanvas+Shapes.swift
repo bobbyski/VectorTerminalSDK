@@ -2,6 +2,27 @@ import Foundation
 
 /// Immediate-mode VTG enclosed shape commands.
 extension VectorTerminalCanvas {
+    /// Clear a retained rectangular graphics region back to transparent pixels.
+    ///
+    /// This is not a background-colored rectangle. `clearRect` composes as an
+    /// eraser in retained order, so earlier primitives on the same graphics
+    /// plane disappear inside the rectangle while later primitives can still
+    /// draw over it. The command is intended for partial redraw, sprite trails,
+    /// and lightweight UI panel refreshes.
+    public func clearRect(
+        id: String,
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int,
+        layer: Int? = nil
+    ) {
+        guard isValidVTGIdentifier(id), width > 0, height > 0 else {
+            return
+        }
+        send("clearRect,id=\(id),x=\(x),y=\(y),w=\(width),h=\(height)\(layerParameter(layer))")
+    }
+
     /// Draw or replace a sharp or rounded triangle.
     ///
     /// `radius` trims each vertex along its adjacent edges and lets the

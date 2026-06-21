@@ -1,5 +1,24 @@
 /// Vector-text convenience built on ordinary VTG drawing primitives.
 extension VectorTerminalCanvas {
+    /// Measure ASCII text drawn by `vectorPrint(...)`.
+    ///
+    /// The returned width matches the drawing advance consumed by the string,
+    /// including spaces and the trailing advance after the final visible glyph.
+    /// This makes it useful for centering, right-aligning, or reserving layout
+    /// space before drawing. The returned height is the effective glyph height
+    /// after applying the same minimum scale as `vectorPrint(...)`.
+    public static func vectorTextSize(height: Int, value: String) -> VTGTextSize {
+        let scale = vectorTextScale(for: height)
+        let advance = Int((7.0 * scale).rounded())
+        let effectiveHeight = Int((7.0 * scale).rounded())
+        return VTGTextSize(width: value.unicodeScalars.count * advance, height: effectiveHeight)
+    }
+
+    /// Instance convenience wrapper for `VectorTerminalCanvas.vectorTextSize(...)`.
+    public func vectorTextSize(height: Int, value: String) -> VTGTextSize {
+        Self.vectorTextSize(height: height, value: value)
+    }
+
     /// Draw ASCII text using the SDK's vector glyph strokes.
     ///
     /// This intentionally uses VTG `draw` segments rather than font rendering
@@ -15,7 +34,7 @@ extension VectorTerminalCanvas {
         width: Int = 2,
         layer: Int? = nil
     ) {
-        let scale = max(1.0, Double(height) / 7.0)
+        let scale = Self.vectorTextScale(for: height)
         let glyphWidth = Int((5.0 * scale).rounded())
         let advance = Int((7.0 * scale).rounded())
         var cursorX = x
@@ -57,5 +76,10 @@ extension VectorTerminalCanvas {
             cursorX += advance
             glyphIndex += 1
         }
+    }
+
+    /// Shared vector-text scale calculation used by measuring and rendering.
+    private static func vectorTextScale(for height: Int) -> Double {
+        max(1.0, Double(height) / 7.0)
     }
 }
