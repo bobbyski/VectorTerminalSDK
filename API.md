@@ -1,6 +1,6 @@
 # VectorTerminalSDK API Reference
 
-Version: `1.5.1`
+Version: `1.5.2`
 
 VectorTerminalSDK is a Swift wrapper around VectorTerminal Graphics (VTG) plus the ANSI helpers needed to run graphical terminal apps safely. The SDK is deliberately low-level: drawing methods map closely to VTG escape sequences, while session, event, and output helpers remove the repetitive terminal plumbing.
 
