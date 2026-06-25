@@ -7,7 +7,7 @@ extension VectorTerminalCanvas {
     /// This makes it useful for centering, right-aligning, or reserving layout
     /// space before drawing. The returned height is the effective glyph height
     /// after applying the same minimum scale as `vectorPrint(...)`.
-    public static func vectorTextSize(height: Int, value: String) -> VTGTextSize {
+    public nonisolated static func vectorTextSize(height: Int, value: String) -> VTGTextSize {
         let scale = vectorTextScale(for: height)
         let advance = Int((7.0 * scale).rounded())
         let effectiveHeight = Int((7.0 * scale).rounded())
@@ -15,7 +15,7 @@ extension VectorTerminalCanvas {
     }
 
     /// Instance convenience wrapper for `VectorTerminalCanvas.vectorTextSize(...)`.
-    public func vectorTextSize(height: Int, value: String) -> VTGTextSize {
+    public nonisolated func vectorTextSize(height: Int, value: String) -> VTGTextSize {
         Self.vectorTextSize(height: height, value: value)
     }
 
@@ -79,7 +79,7 @@ extension VectorTerminalCanvas {
     }
 
     /// Shared vector-text scale calculation used by measuring and rendering.
-    private static func vectorTextScale(for height: Int) -> Double {
+    private nonisolated static func vectorTextScale(for height: Int) -> Double {
         max(1.0, Double(height) / 7.0)
     }
 }

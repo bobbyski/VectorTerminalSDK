@@ -1,6 +1,7 @@
 import Foundation
 import VectorTerminalSDK
 
+@MainActor
 final class EventHarness {
     private let inputPipe = Pipe()
     private let outputPipe = Pipe()

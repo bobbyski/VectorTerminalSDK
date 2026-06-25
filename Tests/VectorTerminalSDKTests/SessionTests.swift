@@ -2,6 +2,7 @@ import Foundation
 import Testing
 import VectorTerminalSDK
 
+@MainActor
 struct SessionTests {
     private let esc = "\u{1B}"
 

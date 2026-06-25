@@ -1,6 +1,7 @@
 import Testing
 import VectorTerminalSDK
 
+@MainActor
 struct CapabilityParsingTests {
     private let esc = "\u{1B}"
 
