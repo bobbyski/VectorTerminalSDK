@@ -229,14 +229,14 @@ ESC _ VTG;mouse,type=scroll,button=5,x=412,y=318,cellX=42,cellY=17,scrollX=0,scr
 `capabilities?` advertises a versioned flat schema while preserving older fields:
 
 ```text
-ESC _ VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=1.5.0,... ESC \
+ESC _ VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=1.5.1,... ESC \
 ```
 
 Important fields:
 
 - `protocol=VTG`: identifies the graphics protocol.
 - `schema=vtg.capabilities.v1`: identifies the shape of the capability response.
-- `version=1.5.0`: identifies the VTG wire command version.
+- `version=1.5.1`: identifies the VTG wire command version.
 - `renderer=metal|coreGraphics|svg|overlay`: identifies the host terminal view's active renderer. The SDK exposes it as a string so clients can observe future renderer names without waiting for a package update.
 - `commands=...`: pipe-separated implemented command names.
 - `planned=...`: pipe-separated documented command names that are not yet implemented.
