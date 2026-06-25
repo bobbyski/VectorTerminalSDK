@@ -350,7 +350,7 @@ public func clearRect(
 )
 ```
 
-Clears a retained rectangular overlay graphics region back to transparent pixels. This is different from drawing a background-colored rectangle: earlier overlay graphics in the same compositing plane are erased inside the rectangle, while later primitives can still draw over it. Native under-text/text-plane clearing is intentionally deferred until shared-plane compositing is complete.
+Immediately clears a rectangular graphics region by removing retained primitives on the target layer whose bounds touch the rectangle. This is different from drawing a background-colored rectangle: the old objects are removed from the scene, so later redraws do not leave orphaned vector strokes behind.
 
 ```swift
 public func triangle(

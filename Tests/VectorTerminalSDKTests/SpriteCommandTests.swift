@@ -33,7 +33,7 @@ struct SpriteCommandTests {
         let output = CapturingOutput()
         let canvas = VectorTerminalCanvas.hostValidated(output: output)
 
-        canvas.uploadSprite(id: "bad-id", width: 2, height: 2, pixels: [0, 1, 1, 0], palette: [.cyan])
+        canvas.uploadSprite(id: "bad$id", width: 2, height: 2, pixels: [0, 1, 1, 0], palette: [.cyan])
         canvas.uploadSprite(id: "short", width: 2, height: 2, pixels: [0, 1, 1], palette: [.cyan])
         canvas.uploadSprite(id: "nopalette", width: 2, height: 2, pixels: [0, 1, 1, 0], palette: [])
 

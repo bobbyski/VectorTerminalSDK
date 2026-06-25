@@ -113,7 +113,7 @@ This table is the fastest way to see what the SDK emits. `ESC _` starts an APC c
 | `canvas.hitRegion(id:x:y:width:height:layer:target:)` | `ESC _ VTG;hit,id=<id>,x=<px>,y=<px>,w=<px>,h=<px>,layer=<-1-4>,target=<id> ESC \` | Registers a rectangular hit region. |
 | `canvas.clearHitRegions(id:layer:)` | `ESC _ VTG;hitClear,id=<id> ESC \`, `ESC _ VTG;hitClear,layer=<n> ESC \`, or `ESC _ VTG;hitClear ESC \` | Clears one, one layer, or all hit regions. |
 | `canvas.pixel(...)` | `ESC _ VTG;pixel,id=<id>,x=<px>,y=<px>,color=<color> ESC \` | Single retained pixel. |
-| `canvas.clearRect(...)` | `ESC _ VTG;clearRect,id=<id>,x=<px>,y=<px>,w=<px>,h=<px> ESC \` | Retained transparent clear rectangle for overlay layers. This erases earlier overlay graphics in the same compositing plane; it is not a background-colored fill. |
+| `canvas.clearRect(...)` | `ESC _ VTG;clearRect,id=<id>,x=<px>,y=<px>,w=<px>,h=<px> ESC \` | Immediate region clear. Removes retained primitives on the target layer whose bounds touch the rectangle; it is not a background-colored fill. |
 | `canvas.line(..., lineCap:)` | `ESC _ VTG;line,id=<id>,x1=<px>,y1=<px>,x2=<px>,y2=<px>,stroke=<color>,width=<n>,lineCap=<cap> ESC \` | Retained line segment. `lineCap` is optional. |
 | `canvas.draw(..., lineCap:lineJoin:)` | `ESC _ VTG;draw,id=<id>,stroke=<color>,width=<n>,lineCap=<cap>,lineJoin=<join>;x,y x,y ... ESC \` | Retained polyline. Stroke style parameters are optional. |
 | `canvas.quadraticCurve(..., lineCap:lineJoin:)` | `ESC _ VTG;curve,id=<id>,kind=quadratic,...,lineCap=<cap>,lineJoin=<join> ESC \` | Quadratic Bezier curve. Stroke style parameters are optional. |
