@@ -23,9 +23,7 @@ extension VectorTerminalCanvas {
                             // Polling is a compatibility fallback. Native resize
                             // events are preferred, but older/debug builds may
                             // only answer explicit capability queries.
-                            await MainActor.run {
-                                canvas.send("capabilities?")
-                            }
+                            canvas.send("capabilities?")
                             lastCanvasPoll = Date()
                         }
                         continue
@@ -40,13 +38,9 @@ extension VectorTerminalCanvas {
                         collectingEscape = true
                         escapeBuffer.append(byte)
                         let escapeSnapshot = escapeBuffer
-                        let isComplete = await MainActor.run {
-                            canvas.isCompleteEscape(escapeSnapshot)
-                        }
+                        let isComplete = canvas.isCompleteEscape(escapeSnapshot)
                         if isComplete {
-                            let event = await MainActor.run {
-                                canvas.parseEscapeEvent(escapeSnapshot)
-                            }
+                            let event = canvas.parseEscapeEvent(escapeSnapshot)
                             if let event {
                                 continuation.yield(event)
                             }

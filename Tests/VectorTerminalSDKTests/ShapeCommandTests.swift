@@ -1,7 +1,6 @@
 import Testing
 import VectorTerminalSDK
 
-@MainActor
 struct ShapeCommandTests {
     @Test func clearRectCommandClearsRetainedRegion() {
         let output = CapturingOutput()

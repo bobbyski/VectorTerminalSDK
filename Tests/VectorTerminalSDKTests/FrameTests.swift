@@ -2,7 +2,6 @@ import Foundation
 import Testing
 import VectorTerminalSDK
 
-@MainActor
 struct FrameTests {
     @Test func frameCommandsAreEmittedThroughCanvas() throws {
         let output = CapturingOutput()

@@ -2,7 +2,6 @@ import Foundation
 import Testing
 import VectorTerminalSDK
 
-@MainActor
 struct RasterCommandTests {
     @Test func imageCommandCanRequestNearestFiltering() {
         let output = CapturingOutput()

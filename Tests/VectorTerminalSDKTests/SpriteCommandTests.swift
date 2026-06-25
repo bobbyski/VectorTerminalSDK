@@ -2,7 +2,6 @@ import Foundation
 import Testing
 import VectorTerminalSDK
 
-@MainActor
 struct SpriteCommandTests {
     @Test func indexedSpriteUploadEmitsPaletteDataPayload() {
         let output = CapturingOutput()

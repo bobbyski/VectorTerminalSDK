@@ -2,7 +2,6 @@ import Foundation
 import Testing
 import VectorTerminalSDK
 
-@MainActor
 struct CanvasCommandTests {
     private let esc = "\u{1B}"
 

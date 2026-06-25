@@ -1,6 +1,6 @@
 # VectorTerminalSDK API Reference
 
-Version: `1.5.1`
+Version: `1.5.2`
 
 VectorTerminalSDK is a Swift wrapper around VectorTerminal Graphics (VTG) plus the ANSI helpers needed to run graphical terminal apps safely. The SDK is deliberately low-level: drawing methods map closely to VTG escape sequences, while session, event, and output helpers remove the repetitive terminal plumbing.
 
@@ -11,16 +11,14 @@ All VTG drawing APIs use pixel coordinates with the origin at the top-left of th
 ### `VectorTerminalCanvas`
 
 ```swift
-@MainActor
 public final class VectorTerminalCanvas: VectorTerminalSDKProtocol
 ```
 
-The canvas is the main SDK object. It owns the input/output handles, performs optional VTG detection, and emits VTG or ANSI bytes. `VectorTerminalCanvas` is main-actor isolated so retained graphics state and terminal output are mutated from one serialized execution context.
+The canvas is the main SDK object. It owns the input/output handles, performs optional VTG detection, and emits VTG or ANSI bytes. `VectorTerminalCanvas` does not impose actor isolation; apps that share one canvas across concurrent work should serialize access at their own boundary.
 
 ### `VectorTerminalSDKProtocol`
 
 ```swift
-@MainActor
 public protocol VectorTerminalSDKProtocol: AnyObject
 ```
 
@@ -34,12 +32,17 @@ canvas.clear()
 canvas.rect(id: "panel", x: 20, y: 20, width: 360, height: 180, stroke: .green)
 ```
 
-Because the protocol is `@MainActor`, calls made from background tasks must hop to the main actor:
+When several tasks may draw to the same canvas, route drawing through one app-owned lane or actor so retained-object mutations stay ordered:
 
 ```swift
-Task.detached {
-    let value = await loadStatus()
-    await MainActor.run {
+actor TerminalDrawingLane {
+    private let canvas: VectorTerminalSDKProtocol
+
+    init(canvas: VectorTerminalSDKProtocol) {
+        self.canvas = canvas
+    }
+
+    func showStatus(_ value: String) {
         canvas.text(id: "status", x: 20, y: 20, value: value, color: .white)
     }
 }
