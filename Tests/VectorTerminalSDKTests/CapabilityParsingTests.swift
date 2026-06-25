@@ -8,7 +8,7 @@ struct CapabilityParsingTests {
         let harness = try EnabledCanvasHarness()
         defer { harness.close() }
 
-        let response = "\(esc)_VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=1.5.1,renderer=metal,canvasWidth=1440,canvasHeight=900,commands=line|rect|text,planned=,primitives=line|rect|text|image|sprite,underText=line|rect,formats=png|jpeg,raster=image|filter,sprites=bitmap|indexed,layers=-1-4,defaultLayer=1,textPlane=reserved,layerScroll=true,layerAlpha=1-4,clip=layer-rect,hit=rect-layered,events=mouse|resize|frame,colors=hex-rgb|hex-rgba\(esc)\\"
+        let response = "\(esc)_VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=1.5.2,renderer=metal,canvasWidth=1440,canvasHeight=900,commands=line|rect|text,planned=,primitives=line|rect|text|image|sprite,underText=line|rect,formats=png|jpeg,raster=image|filter,sprites=bitmap|indexed,layers=-1-4,defaultLayer=1,textPlane=reserved,layerScroll=true,layerAlpha=1-4,clip=layer-rect,hit=rect-layered,events=mouse|resize|frame,colors=hex-rgb|hex-rgba\(esc)\\"
         harness.writeInput(response)
 
         let capabilities = harness.canvas.queryCapabilityInfo(timeoutMilliseconds: 50)
