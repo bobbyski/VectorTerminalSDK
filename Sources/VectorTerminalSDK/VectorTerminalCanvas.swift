@@ -6,7 +6,8 @@ import Foundation
 /// are not available. Apps can catch that error and fall back to normal ANSI
 /// output, or use `noOp(...)` when they want drawing calls to silently do
 /// nothing on traditional terminals.
-public final class VectorTerminalCanvas {
+@MainActor
+public final class VectorTerminalCanvas: VectorTerminalSDKProtocol {
     let output: VTGOutput
     let input: FileHandle
     let esc = "\u{1B}"

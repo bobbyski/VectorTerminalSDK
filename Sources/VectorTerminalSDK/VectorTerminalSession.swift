@@ -6,6 +6,7 @@ import Foundation
 /// alternate screen, hidden cursor, raw input, resize events, mouse reporting,
 /// and final restoration. `end()` is idempotent and also runs from `deinit`,
 /// which keeps terminal state recovery boring even when app code exits early.
+@MainActor
 public final class VectorTerminalSession {
     public let canvas: VectorTerminalCanvas
     public let options: VectorTerminalSessionOptions
@@ -23,7 +24,11 @@ public final class VectorTerminalSession {
     }
 
     deinit {
-        end()
+        if Thread.isMainThread {
+            MainActor.assumeIsolated {
+                end()
+            }
+        }
     }
 
     /// Apply the configured terminal state changes.

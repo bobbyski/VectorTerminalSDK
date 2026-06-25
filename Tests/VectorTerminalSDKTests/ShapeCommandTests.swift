@@ -1,14 +1,17 @@
 import Testing
 import VectorTerminalSDK
 
+@MainActor
 struct ShapeCommandTests {
     @Test func clearRectCommandClearsRetainedRegion() {
         let output = CapturingOutput()
         let canvas = VectorTerminalCanvas.hostValidated(output: output)
 
         canvas.clearRect(id: "erase1", x: 10, y: 20, width: 30, height: 40, layer: VTGLayer.overlay2)
+        canvas.clearRect(id: "clock-clear", x: 100, y: 120, width: 300, height: 80)
 
         #expect(output.text.contains("\u{1B}_VTG;clearRect,id=erase1,x=10,y=20,w=30,h=40,layer=2\u{1B}\\"))
+        #expect(output.text.contains("\u{1B}_VTG;clearRect,id=clock-clear,x=100,y=120,w=300,h=80\u{1B}\\"))
     }
 
     @Test func rectCommandIncludesOptionalCornerRadius() {

@@ -9,7 +9,7 @@ extension VectorTerminalCanvas {
             return false
         }
         return value.allSatisfy { character in
-            character.isASCII && (character.isLetter || character.isNumber)
+            character.isASCII && (character.isLetter || character.isNumber || character == "-" || character == "_")
         }
     }
 

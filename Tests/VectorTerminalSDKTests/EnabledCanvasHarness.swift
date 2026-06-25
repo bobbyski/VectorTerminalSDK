@@ -1,6 +1,7 @@
 import Foundation
 import VectorTerminalSDK
 
+@MainActor
 final class EnabledCanvasHarness {
     private let inputPipe = Pipe()
     private let outputURL: URL
@@ -15,7 +16,7 @@ final class EnabledCanvasHarness {
         outputReadHandle = try FileHandle(forReadingFrom: outputURL)
         outputWriteHandle = try FileHandle(forWritingTo: outputURL)
 
-        let response = "\u{1B}_VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=1.1.2,canvasWidth=80,canvasHeight=40\u{1B}\\"
+        let response = "\u{1B}_VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=1.5.0,canvasWidth=80,canvasHeight=40\u{1B}\\"
         inputPipe.fileHandleForWriting.write(Data(response.utf8))
         canvas = try VectorTerminalCanvas(
             input: inputPipe.fileHandleForReading,
