@@ -1,7 +1,6 @@
 import Testing
 import VectorTerminalSDK
 
-@MainActor
 struct CanvasFrameEventParsingTests {
     private let esc = "\u{1B}"
 

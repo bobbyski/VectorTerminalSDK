@@ -2,7 +2,6 @@ import Foundation
 import VectorTerminalSDK
 
 @main
-@MainActor
 enum VectorTerminalSDKDemo {
     static func main() {
         let canvas: VectorTerminalCanvas

@@ -1,7 +1,6 @@
 import Testing
 import VectorTerminalSDK
 
-@MainActor
 struct VectorTextTests {
     @Test func vectorTextSizeMatchesVectorPrintAdvance() {
         #expect(VectorTerminalCanvas.vectorTextSize(height: 7, value: "").width == 0)

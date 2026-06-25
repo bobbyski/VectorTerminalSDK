@@ -1,7 +1,6 @@
 import Testing
 import VectorTerminalSDK
 
-@MainActor
 struct LayerTests {
     @Test func layerConstantsMatchCurrentVTGContract() {
         #expect(VTGLayer.underText == -1)

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Main-actor SDK surface for apps that want to depend on VectorTerminal
+/// SDK surface for apps that want to depend on VectorTerminal
 /// graphics without depending directly on `VectorTerminalCanvas`.
 ///
 /// The protocol intentionally describes the instance API used after a canvas
@@ -8,10 +8,6 @@ import Foundation
 /// `VectorTerminalCanvas.hostValidated(...)` remain on `VectorTerminalCanvas`
 /// because static factory requirements are awkward to use through existentials.
 ///
-/// All requirements are main-actor isolated so UI hosts can safely route SDK
-/// calls through one terminal view without accidentally mutating retained VTG
-/// state from background work.
-@MainActor
 public protocol VectorTerminalSDKProtocol: AnyObject {
     /// Optional hook used by demos and host apps to surface parser details.
     var eventDebugHandler: ((String) -> Void)? { get set }

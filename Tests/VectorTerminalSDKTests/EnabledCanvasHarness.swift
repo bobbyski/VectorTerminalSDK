@@ -1,7 +1,6 @@
 import Foundation
 import VectorTerminalSDK
 
-@MainActor
 final class EnabledCanvasHarness {
     private let inputPipe = Pipe()
     private let outputURL: URL
