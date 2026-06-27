@@ -51,6 +51,12 @@ extension VectorTerminalCanvas {
         )
     }
 
+    /// Parse the `graphicsVisible?` response.
+    func parseGraphicsLayersVisible(from response: String) -> Bool? {
+        let values = vtgFields(from: response)
+        return (values["visible"] ?? values["enabled"]).map(parseBool)
+    }
+
     /// Parse comma-separated VTG APC fields while stripping the APC envelope.
     ///
     /// Query and event responses arrive as complete strings such as
@@ -84,7 +90,7 @@ extension VectorTerminalCanvas {
             .map(String.init) ?? []
     }
 
-    private func parseBool(_ value: String) -> Bool {
+    func parseBool(_ value: String) -> Bool {
         switch value.lowercased() {
         case "1", "true", "yes", "on":
             return true

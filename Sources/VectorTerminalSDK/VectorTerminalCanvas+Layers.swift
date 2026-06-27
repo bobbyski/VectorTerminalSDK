@@ -70,4 +70,12 @@ extension VectorTerminalCanvas {
         }
         send("clipClear,layer=\(layer)")
     }
+
+    /// Show or hide all retained graphics layers without clearing objects.
+    ///
+    /// Hidden layers remain retained in the terminal. Turning graphics back on
+    /// restores the existing scene without requiring the app to redraw it.
+    public func setGraphicsLayersVisible(_ isVisible: Bool) {
+        send("graphicsVisible,enabled=\(isVisible ? 1 : 0)")
+    }
 }
