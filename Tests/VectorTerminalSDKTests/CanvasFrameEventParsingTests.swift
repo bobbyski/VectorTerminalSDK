@@ -16,12 +16,12 @@ struct CanvasFrameEventParsingTests {
             rawResponse: "\(esc)_VTG;resize,width=1200,height=900\(esc)\\"
         )))
 
-        harness.write("\(esc)_VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=1.5.2,canvasWidth=1440,canvasHeight=1000\(esc)\\")
+        harness.write("\(esc)_VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=1.5.3,canvasWidth=1440,canvasHeight=1000\(esc)\\")
         #expect(harness.canvas.readEvent(timeoutMilliseconds: 50) == .canvas(VTGCanvas(
             width: 1440,
             height: 1000,
             source: "capabilities",
-            rawResponse: "\(esc)_VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=1.5.2,canvasWidth=1440,canvasHeight=1000\(esc)\\"
+            rawResponse: "\(esc)_VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=1.5.3,canvasWidth=1440,canvasHeight=1000\(esc)\\"
         )))
     }
 
