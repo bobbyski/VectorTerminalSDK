@@ -55,6 +55,14 @@ extension VectorTerminalCanvas {
         return nil
     }
 
+    /// Query whether the host is currently rendering retained graphics layers.
+    public func areGraphicsLayersVisible(timeoutMilliseconds: Int = 750) -> Bool? {
+        guard let response = query("graphicsVisible?", timeoutMilliseconds: timeoutMilliseconds) else {
+            return nil
+        }
+        return parseGraphicsLayersVisible(from: response)
+    }
+
     /// Send a VTG query and wait for one APC response.
     func query(_ command: String, timeoutMilliseconds: Int) -> String? {
         let original = enableRawMode()

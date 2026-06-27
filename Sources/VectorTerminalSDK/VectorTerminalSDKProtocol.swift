@@ -70,6 +70,7 @@ public protocol VectorTerminalSDKProtocol: AnyObject {
     func setLayerAlpha(_ layer: Int, alpha: Double)
     func clipLayer(_ layer: Int, x: Int, y: Int, width: Int, height: Int)
     func clearLayerClip(_ layer: Int)
+    func setGraphicsLayersVisible(_ isVisible: Bool)
     func setViewportMode(layer: Int, width: Int, height: Int, scale: VTGViewportScaleMode)
     func clearViewportMode(layer: Int)
     func setViewportScale(layer: Int, scale: Double, x: Int, y: Int)
@@ -132,6 +133,7 @@ public protocol VectorTerminalSDKProtocol: AnyObject {
     func queryCanvas(timeoutMilliseconds: Int) -> VTGCanvas?
     func querySize(timeoutMilliseconds: Int) -> VTGCanvas?
     func queryCurrentCanvas(timeoutMilliseconds: Int) -> VTGCanvas?
+    func areGraphicsLayersVisible(timeoutMilliseconds: Int) -> Bool?
     func queryTerminalCellSize() -> TerminalCellSize?
     func readEvent(timeoutMilliseconds: Int) -> VectorTerminalEvent?
     func events(canvasPollInterval: TimeInterval) -> AsyncStream<VectorTerminalEvent>
