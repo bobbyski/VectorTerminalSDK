@@ -5,6 +5,7 @@ extension VectorTerminalCanvas {
     /// Clear all retained VTG primitives from the terminal overlay.
     public func clear() {
         send("clear")
+        retainedStringObjectIDs.removeAll()
     }
 
     /// Request presentation of the current VTG scene.
@@ -21,6 +22,7 @@ extension VectorTerminalCanvas {
             return
         }
         send("delete,id=\(id)")
+        retainedStringObjectIDs.removeValue(forKey: id)
     }
 
 }

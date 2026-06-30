@@ -39,6 +39,9 @@ extension VectorTerminalCanvas {
         let advance = Int((7.0 * scale).rounded())
         var cursorX = x
         var glyphIndex = 0
+        var objectIDs: [String] = []
+
+        deleteStringObjects(id: id)
 
         for scalar in value.unicodeScalars {
             let ascii = Int(scalar.value)
@@ -49,13 +52,15 @@ extension VectorTerminalCanvas {
 
             let strokes = vectorGlyphStrokes(for: ascii)
             for (strokeIndex, strokePoints) in strokes.enumerated() {
+                let objectID = "\(id)-\(glyphIndex)-\(strokeIndex)"
                 let points = strokePoints.map {
                     VTGPoint(
                         x: cursorX + Int((Double($0.x) * scale).rounded()),
                         y: y + Int((Double($0.y) * scale).rounded())
                     )
                 }
-                draw(id: "\(id)-\(glyphIndex)-\(strokeIndex)", points: points, stroke: stroke, width: width, layer: layer)
+                draw(id: objectID, points: points, stroke: stroke, width: width, layer: layer)
+                objectIDs.append(objectID)
             }
 
             if ascii < 32 || ascii == 127 {
@@ -76,6 +81,14 @@ extension VectorTerminalCanvas {
             cursorX += advance
             glyphIndex += 1
         }
+
+        retainedStringObjectIDs[id] = objectIDs
+    }
+
+    /// Delete all retained primitives emitted by the last `vectorPrint(...)`
+    /// call with this base id.
+    public func deleteVectorText(id: String) {
+        deleteStringObjects(id: id)
     }
 
     /// Shared vector-text scale calculation used by measuring and rendering.

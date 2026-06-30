@@ -44,7 +44,14 @@ func vectorGlyphStrokes(for ascii: Int) -> [[VTGPoint]] {
     case "8": return [p("1,0 3,0 4,1 4,2 3,3 1,3 0,2 0,1 1,0"), p("1,3 3,3 4,4 4,6 3,7 1,7 0,6 0,4 1,3")]
     case "9": return [p("4,7 4,1 3,0 1,0 0,1 0,3 1,4 4,4")]
     case "-": return [p("0,3 4,3")]
+    case ".": return [p("2,7 2,7")]
     case ":": return [p("2,2 2,2"), p("2,5 2,5")]
+    case "!": return [p("2,0 2,5"), p("2,7 2,7")]
+    case "?": return [p("0,1 1,0 3,0 4,1 4,2 2,4 2,5"), p("2,7 2,7")]
+    case "/": return [p("4,0 0,7")]
+    case "\\": return [p("0,0 4,7")]
+    case "_": return [p("0,7 4,7")]
+    case "=": return [p("0,2 4,2"), p("0,5 4,5")]
     default: return [p("0,0 4,0 4,7 0,7 0,0")]
     }
 }
