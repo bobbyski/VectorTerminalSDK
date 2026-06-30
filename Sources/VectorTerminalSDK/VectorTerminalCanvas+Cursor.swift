@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 /// ANSI cursor movement and visibility helpers.
 extension VectorTerminalCanvas {
@@ -50,5 +51,58 @@ extension VectorTerminalCanvas {
     /// Show the terminal text cursor.
     public func showCursor() {
         writeANSI("\(esc)[?25h")
+    }
+
+    /// Query the current terminal cursor position using ANSI DSR.
+    public func queryCursorPosition(timeoutMilliseconds: Int = 750) -> TerminalCursorPosition? {
+        let original = enableRawMode()
+        defer { restoreMode(original) }
+
+        writeANSI("\(esc)[6n")
+        guard let bytes = readCursorPositionResponse(timeoutMilliseconds: timeoutMilliseconds),
+              let response = String(bytes: bytes, encoding: .utf8) else {
+            return nil
+        }
+        return parseCursorPosition(response)
+    }
+
+    private func readCursorPositionResponse(timeoutMilliseconds: Int) -> [UInt8]? {
+        var pollFD = pollfd(fd: input.fileDescriptor, events: Int16(POLLIN), revents: 0)
+        var collected: [UInt8] = []
+        let deadline = Date().addingTimeInterval(Double(timeoutMilliseconds) / 1000)
+
+        while Date() < deadline {
+            let remaining = max(1, Int(deadline.timeIntervalSinceNow * 1000))
+            let result = poll(&pollFD, 1, Int32(remaining))
+            if result <= 0 {
+                break
+            }
+
+            var byte: UInt8 = 0
+            guard read(input.fileDescriptor, &byte, 1) == 1 else {
+                continue
+            }
+            collected.append(byte)
+            if byte == UInt8(ascii: "R") {
+                return collected
+            }
+            if collected.count > 128 {
+                return collected
+            }
+        }
+
+        return collected.isEmpty ? nil : collected
+    }
+
+    private func parseCursorPosition(_ response: String) -> TerminalCursorPosition? {
+        guard response.hasPrefix("\(esc)["), response.hasSuffix("R") else {
+            return nil
+        }
+        let body = response.dropFirst(2).dropLast()
+        let parts = body.split(separator: ";", maxSplits: 1).compactMap { Int($0) }
+        guard parts.count == 2, parts[0] > 0, parts[1] > 0 else {
+            return nil
+        }
+        return TerminalCursorPosition(row: parts[0], column: parts[1])
     }
 }

@@ -137,6 +137,7 @@ This table is the fastest way to see what the SDK emits. `ESC _` starts an APC c
 | `canvas.clearSprites()` | `ESC _ VTG;spriteClear ESC \` | Removes all uploaded sprite assets and sprite instances. |
 | `canvas.vectorPrint(...)` | many `ESC _ VTG;draw,... ESC \` calls | SDK convenience; not a separate VTG command. |
 | `VectorTerminalCanvas.vectorTextSize(...)` / `canvas.vectorTextSize(...)` | none | SDK-only layout helper matching `vectorPrint(...)` advance math. |
+| `canvas.pillButton(...)` | ANSI `ESC[6n`, optional `glyphSize?`, then under-text `rect` + ordinary terminal text + optional `hit` | SDK-only solid pill helper at the current cursor. Width is text plus one terminal cell on each side. |
 | `canvas.startFrame(id:timeoutMilliseconds:)` | `ESC _ VTG;startFrame,id=<id>,timeout=<ms> ESC \` | Starts graphics-only offscreen buffering. |
 | `canvas.endFrame(id:)` | `ESC _ VTG;endFrame,id=<id> ESC \` | Commits a pending graphics frame. |
 | `canvas.cancelFrame(id:)` | `ESC _ VTG;cancelFrame,id=<id> ESC \` | Discards a pending graphics frame. |
@@ -190,6 +191,8 @@ VectorTank pushed the SDK beyond one-shot drawing and mouse-click demos. The fol
 
 - `TerminalCellSize`: a small value type for terminal rows/columns.
 - `queryTerminalCellSize()`: reads the current terminal character grid through `ioctl(TIOCGWINSZ)`.
+- `TerminalGlyphSize`, `queryTerminalGlyphSize()`, and `queryTerminalWSize()`: ask VTG for the pixel width and height of a normal terminal `W` cell through `glyphSize?`, with local fallbacks for older hosts.
+- `pillButton(...)`: creates a solid rounded pill at the current terminal cursor position using `TerminalGlyphSize`, writes the label as ordinary terminal text, and can attach the matching hit region for mouse-driven apps.
 - `queryCurrentCanvas(timeoutMilliseconds:)`: asks `canvas?`, falls back to `size?`, then falls back to `capabilities?` canvas fields. This gives real-time demos one preferred way to learn their pixel canvas.
 - `readEvent(timeoutMilliseconds:)`: a synchronous event-polling API for frame loops that want to drain input each tick.
 - `VectorTerminalSession`: a scoped lifecycle helper for alternate screen, hidden cursor, resize/mouse subscriptions, optional raw input, idempotent cleanup, broad mouse-mode teardown, and a short pending-input drain before restoring cooked terminal mode.

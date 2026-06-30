@@ -57,6 +57,16 @@ extension VectorTerminalCanvas {
         return (values["visible"] ?? values["enabled"]).map(parseBool)
     }
 
+    /// Parse the `glyphSize?` response.
+    func parseTerminalGlyphSize(from response: String) -> TerminalGlyphSize? {
+        let values = vtgFields(from: response)
+        guard let width = values["width"].flatMap(Double.init),
+              let height = values["height"].flatMap(Double.init) else {
+            return nil
+        }
+        return TerminalGlyphSize(width: width, height: height)
+    }
+
     /// Parse comma-separated VTG APC fields while stripping the APC envelope.
     ///
     /// Query and event responses arrive as complete strings such as

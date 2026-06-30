@@ -63,6 +63,14 @@ extension VectorTerminalCanvas {
         return parseGraphicsLayersVisible(from: response)
     }
 
+    /// Query the terminal glyph cell size for a normal-width character.
+    public func queryTerminalGlyphSize(timeoutMilliseconds: Int = 750) -> TerminalGlyphSize? {
+        guard let response = query("glyphSize?", timeoutMilliseconds: timeoutMilliseconds) else {
+            return nil
+        }
+        return parseTerminalGlyphSize(from: response)
+    }
+
     /// Send a VTG query and wait for one APC response.
     func query(_ command: String, timeoutMilliseconds: Int) -> String? {
         let original = enableRawMode()

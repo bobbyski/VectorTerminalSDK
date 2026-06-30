@@ -340,6 +340,34 @@ public func vectorTextSize(height: Int, value: String) -> VTGTextSize
 
 Measures the pixel advance consumed by `vectorPrint(...)` for a string at the requested glyph height. Use the static form when no canvas exists yet, or the instance form when laying out near existing drawing calls.
 
+```swift
+public func pillButton(
+    id: String,
+    text: String,
+    glyphSize: TerminalGlyphSize? = nil,
+    fill: VTGColor = "#0f766eFF",
+    stroke: VTGColor? = nil,
+    lineWidth: Int = 1,
+    layer: Int? = VTGLayer.underText,
+    target: String? = nil,
+    timeoutMilliseconds: Int = 750
+) -> VTGPillButtonLayout?
+```
+
+Draws a solid rounded pill around ordinary terminal text. The current cursor is where the label starts; the pill extends one cell left and one cell right of the text, for a total width of `text.count + 2` cells. The graphics rectangle draws on the under-text layer by default, and no `vectorPrint` or vector glyph strokes are emitted. Pass a known `glyphSize` when you already have it; otherwise the SDK asks the terminal for `glyphSize?`. If `target` is set, the helper also creates a matching hit region.
+
+```swift
+let glyph = canvas.queryTerminalWSize()
+canvas.setCursor(row: 4, column: 8)
+let layout = canvas.pillButton(
+    id: "run-button",
+    text: "RUN",
+    glyphSize: glyph,
+    fill: "#052e16ee",
+    target: "run"
+)
+```
+
 ## Enclosed Shapes
 
 ```swift
@@ -658,10 +686,17 @@ public func queryCapabilityInfo(timeoutMilliseconds: Int = 750) -> VTGCapabiliti
 public func queryCanvas(timeoutMilliseconds: Int = 750) -> VTGCanvas?
 public func querySize(timeoutMilliseconds: Int = 750) -> VTGCanvas?
 public func queryCurrentCanvas(timeoutMilliseconds: Int = 750) -> VTGCanvas?
+public func queryCursorPosition(timeoutMilliseconds: Int = 750) -> TerminalCursorPosition?
 public func queryTerminalCellSize() -> TerminalCellSize?
+public func queryTerminalGlyphSize(timeoutMilliseconds: Int = 750) -> TerminalGlyphSize?
+public func queryTerminalWSize(timeoutMilliseconds: Int = 750) -> TerminalGlyphSize?
 ```
 
 `queryCurrentCanvas` is the recommended size query for app code. It tries `canvas?`, then `size?`, then the canvas fields embedded in `capabilities?`.
+
+`queryCursorPosition` sends ANSI DSR (`ESC[6n`) and parses the `ESC[row;columnR` response. Use it sparingly in event loops because it briefly enters raw input mode and waits for the terminal response.
+
+`queryTerminalGlyphSize` sends `ESC _ VTG;glyphSize? ESC \` and expects `ESC _ VTG;glyphSize,character=W,width=<px>,height=<px> ESC \`. `queryTerminalWSize` is the convenience helper for the normal-width `W` cell; it prefers the VTG query, then falls back to local terminal/window metrics when available. Use it for controls that need to line up with terminal text, such as `pillButton(...)`.
 
 `VTGCapabilities` exposes parsed terminal capability fields:
 
