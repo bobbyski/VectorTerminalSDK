@@ -88,6 +88,7 @@ public protocol VectorTerminalSDKProtocol: AnyObject {
 
     func vectorTextSize(height: Int, value: String) -> VTGTextSize
     func vectorPrint(id: String, x: Int, y: Int, height: Int, value: String, stroke: VTGColor, width: Int, layer: Int?)
+    func pillButton(id: String, text: String, glyphSize: TerminalGlyphSize?, fill: VTGColor, stroke: VTGColor?, lineWidth: Int, layer: Int?, target: String?, timeoutMilliseconds: Int) -> VTGPillButtonLayout?
     func bell()
     func writeText(_ value: String)
     func clearScreen()
@@ -134,7 +135,10 @@ public protocol VectorTerminalSDKProtocol: AnyObject {
     func querySize(timeoutMilliseconds: Int) -> VTGCanvas?
     func queryCurrentCanvas(timeoutMilliseconds: Int) -> VTGCanvas?
     func areGraphicsLayersVisible(timeoutMilliseconds: Int) -> Bool?
+    func queryCursorPosition(timeoutMilliseconds: Int) -> TerminalCursorPosition?
+    func queryTerminalGlyphSize(timeoutMilliseconds: Int) -> TerminalGlyphSize?
     func queryTerminalCellSize() -> TerminalCellSize?
+    func queryTerminalWSize(timeoutMilliseconds: Int) -> TerminalGlyphSize?
     func readEvent(timeoutMilliseconds: Int) -> VectorTerminalEvent?
     func events(canvasPollInterval: TimeInterval) -> AsyncStream<VectorTerminalEvent>
 }

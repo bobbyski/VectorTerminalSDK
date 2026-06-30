@@ -39,9 +39,78 @@ public struct TerminalCellSize: Equatable {
     /// Number of terminal text rows currently visible.
     public var rows: Int
 
-    public init(columns: Int, rows: Int) {
+    /// Terminal pixel width, when reported by the host terminal.
+    public var pixelWidth: Int?
+
+    /// Terminal pixel height, when reported by the host terminal.
+    public var pixelHeight: Int?
+
+    public init(columns: Int, rows: Int, pixelWidth: Int? = nil, pixelHeight: Int? = nil) {
         self.columns = columns
         self.rows = rows
+        self.pixelWidth = pixelWidth
+        self.pixelHeight = pixelHeight
+    }
+}
+
+/// Pixel dimensions for one monospace terminal glyph cell.
+///
+/// This represents the visual cell occupied by a normal-width character such
+/// as `W`, not SDK vector text rendered through `vectorPrint(...)`.
+public struct TerminalGlyphSize: Equatable {
+    /// Width in terminal pixels.
+    public var width: Double
+
+    /// Height in terminal pixels.
+    public var height: Double
+
+    public init(width: Double, height: Double) {
+        self.width = width
+        self.height = height
+    }
+}
+
+/// One-based terminal text cursor position.
+public struct TerminalCursorPosition: Equatable {
+    /// Terminal row.
+    public var row: Int
+
+    /// Terminal column.
+    public var column: Int
+
+    public init(row: Int, column: Int) {
+        self.row = row
+        self.column = column
+    }
+}
+
+/// Pixel-space geometry created by `pillButton(...)`.
+public struct VTGPillButtonLayout: Equatable {
+    /// Left edge in VTG pixel space.
+    public var x: Int
+
+    /// Top edge in VTG pixel space.
+    public var y: Int
+
+    /// Width in VTG pixels.
+    public var width: Int
+
+    /// Height in VTG pixels.
+    public var height: Int
+
+    /// Terminal row used to anchor the pill.
+    public var row: Int
+
+    /// Terminal column used to anchor the pill.
+    public var column: Int
+
+    public init(x: Int, y: Int, width: Int, height: Int, row: Int, column: Int) {
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.row = row
+        self.column = column
     }
 }
 
