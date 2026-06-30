@@ -25,6 +25,8 @@ The SDK source is split by responsibility so protocol growth does not turn into 
 - `VectorTerminalCanvas+Scene.swift`: retained scene, layer, viewport, and hit-region controls.
 - `VectorTerminalCanvas+Drawing.swift`: VTG drawing primitives, including sharp/rounded `rect(...)`, stroked paths, curves, and raster image placement.
 - `VectorTerminalCanvas+VectorText.swift`: ASCII-subset vector text convenience built on VTG `draw(...)`.
+- `VectorTerminalCanvas+LEDText.swift` and `LEDGlyphs.swift`: filled segmented LED alphabet convenience built on VTG `path(...)`.
+- `VectorTerminalCanvas+PillButton.swift`: SDK-only terminal-cell-aligned pill buttons drawn behind ordinary terminal text.
 - `VectorTerminalCanvas+Sprites.swift`: VTG sprite asset upload, retained sprite placement, and sprite transforms.
 - `VectorTerminalCanvas+Frames.swift`: graphics-only offscreen frame helpers.
 - `VectorTerminalCanvas+Queries.swift`: VTG capabilities, canvas, size, resize subscriptions, and terminal cell-size queries.
@@ -63,11 +65,17 @@ The current Swift implementation wraps:
 - `setCursor(row:column:)` convenience alias for absolute ANSI cursor positioning
 - `vectorPrint(id:x:y:height:value:stroke:width:)` for ASCII-subset vector text built on `draw`
 - `vectorTextSize(height:value:)` for measuring the pixel advance consumed by SDK vector text
+- `deleteVectorText(id:)` for removing all retained objects emitted by the last `vectorPrint(...)` call with a base id
+- `ledPrint(id:x:y:height:value:color:inactiveColor:stroke:lineWidth:layer:)` for filled segmented LED-style letters and numerals built on `path`
+- `ledTextSize(height:value:)` for measuring the pixel advance consumed by SDK LED text
+- `deleteLEDText(id:)` and `deleteLCDText(id:)` for removing all retained objects emitted by the last segmented text call with a base id
 - async VTG-native mouse events with pixel coordinates, terminal cell coordinates, optional fixed-viewport virtual coordinates, mouse button, raw down/up, debounced click, drag, and scroll wheel data
 - synchronous event polling with `readEvent(timeoutMilliseconds:)`
 - `VectorTerminalSession` for scoped alternate screen, cursor, resize, mouse, raw-input, and cleanup management
 - typed arrow-key events for `up`, `down`, `left`, and `right`
 - terminal character-cell size queries with `queryTerminalCellSize()`
+- terminal text-cell pixel-size queries with `queryTerminalGlyphSize()` and `queryTerminalWSize()`
+- cell-aligned solid pill buttons with `pillButton(...)`
 - small retained bitmap, indexed, or vector sprites that can be uploaded once, moved, rotated, anchored, and scaled without resending payload data
 - named VTG layer constants through `VTGLayer.underText`, `VTGLayer.textPlane`, `VTGLayer.defaultOverlay`, and `VTGLayer.overlay1...overlay4`
 - a `canvas.defaultLayer` property plus `setDefaultLayer(_:)` for changing the terminal-side retained drawing default
@@ -94,6 +102,8 @@ This table is the fastest way to see what the SDK emits. `ESC _` starts an APC c
 | `canvas.queryCanvas(...)` | `ESC _ VTG;canvas? ESC \` | Preferred direct pixel-canvas query. |
 | `canvas.querySize(...)` | `ESC _ VTG;size? ESC \` | Legacy compatibility pixel-canvas query. |
 | `canvas.queryCurrentCanvas(...)` | `canvas?`, then `size?`, then `capabilities?` | Best app-facing size query. |
+| `canvas.queryTerminalGlyphSize(...)` | `ESC _ VTG;glyphSize? ESC \` | Reads the pixel width and height of the terminal text cell used by a normal-width character. |
+| `canvas.queryTerminalWSize(...)` | `glyphSize?`, then local fallback metrics | Convenience helper for aligning VTG graphics to ordinary terminal text. |
 | `canvas.enableResizeEvents()` | `ESC _ VTG;resizeEvents,enabled=1 ESC \` | Subscribes to terminal resize events. |
 | `canvas.disableResizeEvents()` | `ESC _ VTG;resizeEvents,enabled=0 ESC \` | Unsubscribes from terminal resize events. |
 | `canvas.enableMouseReporting(...)` | `ESC _ VTG;mouseEvents,enabled=1,mode=<mode> ESC \` | Also enables ANSI mouse fallback modes. |
@@ -137,6 +147,10 @@ This table is the fastest way to see what the SDK emits. `ESC _` starts an APC c
 | `canvas.clearSprites()` | `ESC _ VTG;spriteClear ESC \` | Removes all uploaded sprite assets and sprite instances. |
 | `canvas.vectorPrint(...)` | many `ESC _ VTG;draw,... ESC \` calls | SDK convenience; not a separate VTG command. |
 | `VectorTerminalCanvas.vectorTextSize(...)` / `canvas.vectorTextSize(...)` | none | SDK-only layout helper matching `vectorPrint(...)` advance math. |
+| `canvas.deleteVectorText(id:)` | many `ESC _ VTG;delete,id=<child-id> ESC \` calls | Deletes remembered child objects from the last `vectorPrint(...)` using that base id. |
+| `canvas.ledPrint(...)` | many `ESC _ VTG;path,... ESC \` calls | SDK convenience for filled segmented LED-style alphabet/numerals. `inactiveColor` optionally draws unlit segments. |
+| `VectorTerminalCanvas.ledTextSize(...)` / `canvas.ledTextSize(...)` | none | SDK-only layout helper matching `ledPrint(...)` advance math. |
+| `canvas.deleteLEDText(id:)` / `canvas.deleteLCDText(id:)` | many `ESC _ VTG;delete,id=<child-id> ESC \` calls | Deletes remembered child objects from the last `ledPrint(...)` using that base id. |
 | `canvas.pillButton(...)` | ANSI `ESC[6n`, optional `glyphSize?`, then under-text `rect` + ordinary terminal text + optional `hit` | SDK-only solid pill helper at the current cursor. Width is text plus one terminal cell on each side. |
 | `canvas.startFrame(id:timeoutMilliseconds:)` | `ESC _ VTG;startFrame,id=<id>,timeout=<ms> ESC \` | Starts graphics-only offscreen buffering. |
 | `canvas.endFrame(id:)` | `ESC _ VTG;endFrame,id=<id> ESC \` | Commits a pending graphics frame. |
@@ -232,14 +246,14 @@ ESC _ VTG;mouse,type=scroll,button=5,x=412,y=318,cellX=42,cellY=17,scrollX=0,scr
 `capabilities?` advertises a versioned flat schema while preserving older fields:
 
 ```text
-ESC _ VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=1.5.5,... ESC \
+ESC _ VTG;capabilities,protocol=VTG,schema=vtg.capabilities.v1,version=1.5.6,... ESC \
 ```
 
 Important fields:
 
 - `protocol=VTG`: identifies the graphics protocol.
 - `schema=vtg.capabilities.v1`: identifies the shape of the capability response.
-- `version=1.5.5`: identifies the VTG wire command version.
+- `version=1.5.6`: identifies the VTG wire command version.
 - `renderer=metal|coreGraphics|svg|overlay`: identifies the host terminal view's active renderer. The SDK exposes it as a string so clients can observe future renderer names without waiting for a package update.
 - `commands=...`: pipe-separated implemented command names.
 - `planned=...`: pipe-separated documented command names that are not yet implemented.

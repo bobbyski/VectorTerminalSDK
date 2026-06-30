@@ -1,6 +1,6 @@
 # VectorTerminalSDK API Reference
 
-Version: `1.5.5`
+Version: `1.5.6`
 
 VectorTerminalSDK is a Swift wrapper around VectorTerminal Graphics (VTG) plus the ANSI helpers needed to run graphical terminal apps safely. The SDK is deliberately low-level: drawing methods map closely to VTG escape sequences, while session, event, and output helpers remove the repetitive terminal plumbing.
 
@@ -47,6 +47,26 @@ actor TerminalDrawingLane {
     }
 }
 ```
+
+## Common Cell-Aligned UI APIs
+
+Use these two helpers when VTG graphics need to align with ordinary terminal text:
+
+```swift
+let glyph = canvas.queryTerminalWSize()
+canvas.setCursor(row: 4, column: 8)
+let layout = canvas.pillButton(
+    id: "run-button",
+    text: "RUN",
+    glyphSize: glyph,
+    fill: "#059669FF",
+    target: "run"
+)
+```
+
+`queryTerminalWSize()` returns the terminal text cell size in VTG canvas pixels. It is the SDK method to use when you need the width and height of the normal monospace cell used for plain ANSI text. `pillButton(...)` uses that size to draw a solid rounded rectangle behind regular terminal text at the current cursor position. The text remains ordinary terminal text; the SDK does not draw vector text for pill labels.
+
+The detailed references are in [Terminal Text Cell Size Queries](#terminal-text-cell-size-queries) and [Pill Buttons](#pill-buttons).
 
 ```swift
 public init(
@@ -339,6 +359,59 @@ public func vectorTextSize(height: Int, value: String) -> VTGTextSize
 ```
 
 Measures the pixel advance consumed by `vectorPrint(...)` for a string at the requested glyph height. Use the static form when no canvas exists yet, or the instance form when laying out near existing drawing calls.
+
+```swift
+public func deleteVectorText(id: String)
+```
+
+Deletes all retained child primitives emitted by the last `vectorPrint(...)` call that used the supplied base `id`. `vectorPrint(...)` also calls this automatically before redrawing the same base id, so shorter replacement strings do not leave old glyph strokes behind.
+
+### LED Alphabet
+
+```swift
+public func ledPrint(
+    id: String,
+    x: Int,
+    y: Int,
+    height: Int,
+    value: String,
+    color: VTGColor = "#B7FF2AFF",
+    inactiveColor: VTGColor? = nil,
+    stroke: VTGColor? = nil,
+    lineWidth: Int = 1,
+    layer: Int? = nil
+)
+```
+
+Draws filled segmented LED-style letters and numerals using VTG `path(...)` primitives. The SDK supplies an original angular alphabet inspired by classic LED displays. It includes uppercase letters, digits, space, and a few punctuation fallbacks. Set `inactiveColor` to also draw the unlit segments behind each character; leave it nil to draw only the lit letter segments.
+
+```swift
+canvas.ledPrint(
+    id: "alarm-title",
+    x: 40,
+    y: 80,
+    height: 64,
+    value: "READY 01",
+    color: "#B7FF2AFF",
+    inactiveColor: "#10201866"
+)
+```
+
+```swift
+public static func ledTextSize(height: Int, value: String) -> VTGTextSize
+public func ledTextSize(height: Int, value: String) -> VTGTextSize
+```
+
+Measures the pixel advance consumed by `ledPrint(...)`. The LED alphabet uses a 10x16 design grid with a 12-unit advance, scaled to the requested height. These helpers intentionally parallel `vectorTextSize(...)`.
+
+```swift
+public func deleteLEDText(id: String)
+public func deleteLCDText(id: String)
+```
+
+Deletes all retained child primitives emitted by the last `ledPrint(...)` call that used the supplied base `id`. `deleteLCDText(id:)` is an alias for callers who think of segmented LED text as LCD text. `ledPrint(...)` also calls this cleanup automatically before redrawing the same base id.
+
+### Pill Buttons
 
 ```swift
 public func pillButton(
@@ -696,7 +769,27 @@ public func queryTerminalWSize(timeoutMilliseconds: Int = 750) -> TerminalGlyphS
 
 `queryCursorPosition` sends ANSI DSR (`ESC[6n`) and parses the `ESC[row;columnR` response. Use it sparingly in event loops because it briefly enters raw input mode and waits for the terminal response.
 
-`queryTerminalGlyphSize` sends `ESC _ VTG;glyphSize? ESC \` and expects `ESC _ VTG;glyphSize,character=W,width=<px>,height=<px> ESC \`. `queryTerminalWSize` is the convenience helper for the normal-width `W` cell; it prefers the VTG query, then falls back to local terminal/window metrics when available. Use it for controls that need to line up with terminal text, such as `pillButton(...)`.
+### Terminal Text Cell Size Queries
+
+`queryTerminalCellSize()` returns the terminal grid and, when available, the pixel dimensions reported by the operating system. It is useful for broad terminal layout, but it is not always precise enough to align graphics to rendered text.
+
+`queryTerminalGlyphSize(...)` sends `ESC _ VTG;glyphSize? ESC \` and expects `ESC _ VTG;glyphSize,character=W,width=<px>,height=<px> ESC \`. In SwiftTerm-backed VectorTerminal hosts, this is the actual logical VTG canvas size of one normal terminal text cell and may be fractional. Use this when you need graphics to sit exactly behind or beside ordinary ANSI text.
+
+`queryTerminalWSize(...)` is the app-facing convenience helper for the normal-width `W` cell. It prefers the VTG `glyphSize?` query, then falls back to local terminal/window metrics when available. Use it for controls that need to line up with terminal text, such as `pillButton(...)`.
+
+```swift
+if let glyph = canvas.queryTerminalWSize() {
+    let pixelWidth = glyph.width
+    let pixelHeight = glyph.height
+    canvas.text(
+        id: "debug-cell-size",
+        x: 20,
+        y: 20,
+        value: "cell \(pixelWidth) x \(pixelHeight)",
+        color: .white
+    )
+}
+```
 
 `VTGCapabilities` exposes parsed terminal capability fields:
 

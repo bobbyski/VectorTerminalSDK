@@ -12,6 +12,7 @@ public final class VectorTerminalCanvas: VectorTerminalSDKProtocol {
     let esc = "\u{1B}"
     let isEnabled: Bool
     var storedDefaultLayer = VTGLayer.defaultOverlay
+    var retainedStringObjectIDs: [String: [String]] = [:]
 
     /// Optional hook used by demos to surface parser details during debugging.
     public var eventDebugHandler: ((String) -> Void)?
@@ -104,5 +105,16 @@ public final class VectorTerminalCanvas: VectorTerminalSDKProtocol {
     /// Clamp an RGB channel for ANSI true-color helpers.
     func clampColor(_ value: Int) -> Int {
         min(255, max(0, value))
+    }
+
+    /// Delete retained child primitives remembered for one SDK string helper.
+    func deleteStringObjects(id: String) {
+        guard isValidVTGIdentifier(id),
+              let objectIDs = retainedStringObjectIDs.removeValue(forKey: id) else {
+            return
+        }
+        for objectID in objectIDs {
+            delete(id: objectID)
+        }
     }
 }

@@ -88,6 +88,11 @@ public protocol VectorTerminalSDKProtocol: AnyObject {
 
     func vectorTextSize(height: Int, value: String) -> VTGTextSize
     func vectorPrint(id: String, x: Int, y: Int, height: Int, value: String, stroke: VTGColor, width: Int, layer: Int?)
+    func deleteVectorText(id: String)
+    func ledTextSize(height: Int, value: String) -> VTGTextSize
+    func ledPrint(id: String, x: Int, y: Int, height: Int, value: String, color: VTGColor, inactiveColor: VTGColor?, stroke: VTGColor?, lineWidth: Int, layer: Int?)
+    func deleteLEDText(id: String)
+    func deleteLCDText(id: String)
     func pillButton(id: String, text: String, glyphSize: TerminalGlyphSize?, fill: VTGColor, stroke: VTGColor?, lineWidth: Int, layer: Int?, target: String?, timeoutMilliseconds: Int) -> VTGPillButtonLayout?
     func bell()
     func writeText(_ value: String)
