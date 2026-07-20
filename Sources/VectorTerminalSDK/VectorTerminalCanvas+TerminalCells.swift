@@ -1,4 +1,8 @@
+#if os(Linux)
+import Glibc
+#else
 import Darwin
+#endif
 import Foundation
 
 /// Terminal text-grid measurement helpers.
@@ -11,7 +15,7 @@ extension VectorTerminalCanvas {
     /// through `TIOCGWINSZ`, those are included too.
     public func queryTerminalCellSize() -> TerminalCellSize? {
         var windowSize = winsize()
-        guard ioctl(input.fileDescriptor, TIOCGWINSZ, &windowSize) == 0,
+        guard ioctl(input.fileDescriptor, UInt(TIOCGWINSZ), &windowSize) == 0,
               windowSize.ws_col > 0,
               windowSize.ws_row > 0 else {
             return nil

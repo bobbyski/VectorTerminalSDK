@@ -1,5 +1,9 @@
 import Foundation
+#if os(Linux)
+import Glibc
+#else
 import Darwin
+#endif
 
 /// ANSI cursor movement and visibility helpers.
 extension VectorTerminalCanvas {

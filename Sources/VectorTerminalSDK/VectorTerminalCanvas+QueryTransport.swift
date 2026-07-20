@@ -1,4 +1,8 @@
+#if os(Linux)
+import Glibc
+#else
 import Darwin
+#endif
 import Foundation
 
 /// Low-level APC response transport used by synchronous VTG queries.

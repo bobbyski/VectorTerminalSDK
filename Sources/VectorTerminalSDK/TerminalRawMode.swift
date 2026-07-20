@@ -1,4 +1,8 @@
+#if os(Linux)
+import Glibc
+#else
 import Darwin
+#endif
 import Foundation
 
 /// Put stdin into a minimal raw mode and return the previous terminal settings.
