@@ -823,6 +823,35 @@ public struct VTGCapabilities: Equatable {
 
 ## Events
 
+### Link Detection
+
+```swift
+public func enableLinkDetection(
+    decorate: Bool = true,
+    color: VTGColor? = nil
+)
+
+public func disableLinkDetection()
+```
+
+`enableLinkDetection` asks the host terminal to recognize explicit OSC 8 links
+and URL-like ordinary terminal text. With `decorate: true`, hovered links use a
+link-colored foreground and underline. Passing `nil` for `color` omits the wire
+field and selects the terminal default, currently blue (`#3b82f6`). Passing
+`decorate: false` keeps detection and activation available without changing text
+appearance.
+
+Link lookup does not consume mouse movement. When a program has enabled VTG or
+ANSI mouse capture, that capture owns button events before local link activation;
+this prevents a click from both reaching the program and opening a link.
+
+Raw protocol forms:
+
+```text
+ESC _ VTG;linkDetection,enabled=1,decorate=1,color=#3b82f6 ESC \
+ESC _ VTG;linkDetection,enabled=0 ESC \
+```
+
 ```swift
 public func enableResizeEvents()
 public func disableResizeEvents()

@@ -132,6 +132,10 @@ public protocol VectorTerminalSDKProtocol: AnyObject {
     func enableMouseReporting()
     func enableMouseReporting(mode: String)
     func disableMouseReporting()
+    /// Enable link recognition and optionally decorate recognized terminal text.
+    func enableLinkDetection(decorate: Bool, color: VTGColor?)
+    /// Disable link recognition and activation.
+    func disableLinkDetection()
     func enableResizeEvents()
     func disableResizeEvents()
     func queryCapabilities(timeoutMilliseconds: Int) -> String?

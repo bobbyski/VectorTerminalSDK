@@ -108,6 +108,8 @@ This table is the fastest way to see what the SDK emits. `ESC _` starts an APC c
 | `canvas.disableResizeEvents()` | `ESC _ VTG;resizeEvents,enabled=0 ESC \` | Unsubscribes from terminal resize events. |
 | `canvas.enableMouseReporting(...)` | `ESC _ VTG;mouseEvents,enabled=1,mode=<mode> ESC \` | Also enables ANSI mouse fallback modes. |
 | `canvas.disableMouseReporting()` | `ESC _ VTG;mouseEvents,enabled=0 ESC \` | Also disables common ANSI mouse fallback modes. |
+| `canvas.enableLinkDetection(decorate:color:)` | `ESC _ VTG;linkDetection,enabled=1,decorate=<0|1>,color=<optional> ESC \` | Detects OSC 8 and URL-like text; omitted color uses blue. |
+| `canvas.disableLinkDetection()` | `ESC _ VTG;linkDetection,enabled=0 ESC \` | Disables link hover, decoration, and activation. |
 | `canvas.clear()` | `ESC _ VTG;clear ESC \` | Clears retained VTG scene state. |
 | `canvas.present()` | `ESC _ VTG;present ESC \` | Presentation hint for the current retained scene. |
 | `canvas.delete(id:)` | `ESC _ VTG;delete,id=<id> ESC \` | Removes one retained primitive by id. |
@@ -190,6 +192,8 @@ These helpers emit traditional terminal control sequences and continue to work e
 | `canvas.enableFocusReporting()` / `disableFocusReporting()` | `ESC [?1004h` / `ESC [?1004l` | Terminal focus events. |
 | `canvas.enableMouseReporting(...)` | VTG mouse plus `ESC [?1000h` and `ESC [?1006h` | VTG-native primary path with ANSI SGR fallback. |
 | `canvas.disableMouseReporting()` | VTG mouse off plus `ESC [?1016l`, `?1015l`, `?1006l`, `?1005l`, `?1003l`, `?1002l`, `?1000l`, `?9l` | Broad mouse cleanup for shell restore safety. |
+| `canvas.enableLinkDetection(decorate:color:)` | `ESC _ VTG;linkDetection,enabled=1,decorate=<0|1>[,color=#RRGGBB] ESC \` | Detection is observational; VTG/ANSI mouse capture keeps click ownership. |
+| `canvas.disableLinkDetection()` | `ESC _ VTG;linkDetection,enabled=0 ESC \` | Restores local terminal behavior without link lookup. |
 
 ## VTGShowcase Gallery Demo
 
