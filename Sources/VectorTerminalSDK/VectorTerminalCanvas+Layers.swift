@@ -38,6 +38,37 @@ extension VectorTerminalCanvas {
         send("layerScroll,layer=\(layer),x=\(x),y=\(y)")
     }
 
+    /// Anchor a layer's graphics to a line of text so they scroll with it.
+    ///
+    /// The default everywhere is `.screen`: a shape drawn at y=100 stays at
+    /// y=100 while output scrolls underneath it, which is what a HUD wants and
+    /// what an inline widget does not. In `.text` mode the layer's origin is
+    /// pinned to an absolute buffer line, and the terminal recomputes the
+    /// layer's offset as that line moves — the mode for an inline TUIKit
+    /// control that should scroll away with the prompt it belongs to.
+    ///
+    /// Omit `line` to mean "here": the host substitutes the line currently
+    /// being written, since only it knows the buffer.
+    ///
+    /// **Graphics are not kept in scrollback.** The anchor line is remembered
+    /// even after it scrolls out of view, so returning to it is exact, but
+    /// nothing is rasterised per scrolled line.
+    ///
+    /// Applies to every layer including -1: `layerScroll` refuses the
+    /// under-text plane, but anchoring is not scrolling — it says where the
+    /// layer belongs in the document, and chrome drawn beneath its own text is
+    /// exactly the case that needs it.
+    public func setLayerAnchor(_ layer: Int, _ mode: VTGLayerAnchorMode, line: Int? = nil) {
+        guard isSupportedVTGLayer(layer) else {
+            return
+        }
+        var payload = "layerAnchor,layer=\(layer),mode=\(mode.rawValue)"
+        if mode == .text, let line {
+            payload += ",line=\(line)"
+        }
+        send(payload)
+    }
+
     /// Set an overlay layer's opacity multiplier.
     ///
     /// This is useful for HUDs and transient overlays: callers can fade an

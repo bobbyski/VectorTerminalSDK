@@ -226,3 +226,14 @@ public enum VectorTerminalSDKError: Error, LocalizedError {
         }
     }
 }
+
+
+/// Whether a layer's graphics are pinned to the viewport or ride with the text.
+///
+/// See ``VectorTerminalCanvas/setLayerAnchor(_:_:line:)``.
+public enum VTGLayerAnchorMode: String, Equatable, CaseIterable, Sendable {
+    /// Pinned to the viewport. Output scrolls underneath. The default.
+    case screen
+    /// Anchored to a line of text, and scrolls with it.
+    case text
+}
