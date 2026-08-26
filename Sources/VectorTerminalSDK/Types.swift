@@ -14,6 +14,10 @@ public struct VTGCanvas: Equatable {
     /// Raw VTG response used to produce the parsed value, when captured.
     public var rawResponse: String?
 
+    /// A canvas size, optionally carrying where it was parsed from.
+    ///
+    /// `source` and `rawResponse` are diagnostic only; they are absent when
+    /// the size came from somewhere that did not record them.
     public init(width: Int, height: Int, source: String? = nil, rawResponse: String? = nil) {
         self.width = width
         self.height = height
@@ -21,6 +25,7 @@ public struct VTGCanvas: Equatable {
         self.rawResponse = rawResponse
     }
 
+    /// The dimensions plus whatever provenance was captured, for logs.
     public var debugDescription: String {
         let sourceText = source.map { " source=\($0)" } ?? ""
         let rawText = rawResponse.map { " raw=\($0.debugEscapedForVTG)" } ?? ""
@@ -45,6 +50,7 @@ public struct TerminalCellSize: Equatable {
     /// Terminal pixel height, when reported by the host terminal.
     public var pixelHeight: Int?
 
+    /// A terminal size in cells, with pixel dimensions when the host reports them.
     public init(columns: Int, rows: Int, pixelWidth: Int? = nil, pixelHeight: Int? = nil) {
         self.columns = columns
         self.rows = rows
@@ -64,6 +70,7 @@ public struct TerminalGlyphSize: Equatable {
     /// Height in terminal pixels.
     public var height: Double
 
+    /// A glyph size in terminal pixels.
     public init(width: Double, height: Double) {
         self.width = width
         self.height = height
@@ -78,6 +85,7 @@ public struct TerminalCursorPosition: Equatable {
     /// Terminal column.
     public var column: Int
 
+    /// A position at the given terminal row and column.
     public init(row: Int, column: Int) {
         self.row = row
         self.column = column
@@ -104,6 +112,7 @@ public struct VTGPillButtonLayout: Equatable {
     /// Terminal column used to anchor the pill.
     public var column: Int
 
+    /// A pill's pixel rect together with the cell it is anchored to.
     public init(x: Int, y: Int, width: Int, height: Int, row: Int, column: Int) {
         self.x = x
         self.y = y
@@ -126,6 +135,7 @@ public struct VTGTextSize: Equatable {
     /// Height in VTG pixels.
     public var height: Int
 
+    /// A text size in VTG pixels.
     public init(width: Int, height: Int) {
         self.width = width
         self.height = height
@@ -219,6 +229,7 @@ public enum VectorTerminalSDKError: Error, LocalizedError {
     /// The SDK did not receive a VTG capabilities response during initialization.
     case vectorTerminalNotDetected
 
+    /// A message describing the failure, suitable for showing the user.
     public var errorDescription: String? {
         switch self {
         case .vectorTerminalNotDetected:

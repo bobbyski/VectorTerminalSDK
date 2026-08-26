@@ -7,13 +7,16 @@ import Foundation
 /// and final restoration. `end()` is idempotent and also runs from `deinit`,
 /// which keeps terminal state recovery boring even when app code exits early.
 public final class VectorTerminalSession {
+    /// The canvas this session draws through.
     public let canvas: VectorTerminalCanvas
+    /// Which terminal states `start()` applies and `end()` restores.
     public let options: VectorTerminalSessionOptions
 
     private var originalMode: termios?
     private var isActive = false
     private let inputDrainGraceMilliseconds = 80
 
+    /// Creates a session for `canvas`. Nothing is applied until `start()`.
     public init(
         canvas: VectorTerminalCanvas,
         options: VectorTerminalSessionOptions = .init()

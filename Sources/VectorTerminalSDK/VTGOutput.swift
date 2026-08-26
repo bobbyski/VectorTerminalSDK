@@ -21,10 +21,12 @@ extension FileHandle: VTGOutput {}
 public final class ClosureVTGOutput: VTGOutput {
     private let writer: (Data) -> Void
 
+    /// Wraps a closure that delivers bytes to the host terminal.
     public init(_ writer: @escaping (Data) -> Void) {
         self.writer = writer
     }
 
+    /// Hands `data` to the closure.
     public func write(_ data: Data) {
         writer(data)
     }

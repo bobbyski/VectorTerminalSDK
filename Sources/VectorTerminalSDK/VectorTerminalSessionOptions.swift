@@ -31,6 +31,9 @@ public struct VectorTerminalSessionOptions: Equatable {
     /// Put stdin into raw mode for byte-oriented input.
     public var rawInput: Bool
 
+    /// Creates an option set, defaulting to the full-screen demo behavior
+    /// described above: alternate screen and hidden cursor on, mouse and raw
+    /// input off.
     public init(
         useAlternateScreen: Bool = true,
         hideCursor: Bool = true,

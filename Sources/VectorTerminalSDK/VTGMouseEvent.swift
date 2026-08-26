@@ -53,6 +53,8 @@ public struct VTGMouseEvent: Equatable {
     /// Raw VTG or ANSI escape sequence used to produce the event.
     public var rawSequence: String
 
+    /// Creates a mouse event. The optional fields stay nil when the terminal
+    /// did not report them, which is how a caller tells "absent" from zero.
     public init(
         x: Int,
         y: Int,
@@ -89,6 +91,7 @@ public struct VTGMouseEvent: Equatable {
         self.rawSequence = rawSequence
     }
 
+    /// A one-line dump of whichever fields are present, for tracing input.
     public var debugDescription: String {
         let cellText = cellX.flatMap { cx in cellY.map { cy in " cell=\(cx),\(cy)" } } ?? ""
         let scrollText = scrollX.flatMap { sx in scrollY.map { sy in " scroll=\(sx),\(sy)" } } ?? ""

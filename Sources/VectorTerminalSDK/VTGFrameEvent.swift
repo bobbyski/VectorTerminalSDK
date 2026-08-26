@@ -21,6 +21,8 @@ public struct VTGFrameEvent: Equatable {
     /// Raw VTG frame response for diagnostics.
     public var rawResponse: String
 
+    /// Creates a frame event. `reason` and `timeoutMilliseconds` stay nil for
+    /// the event types that do not carry them.
     public init(
         type: String,
         id: String,

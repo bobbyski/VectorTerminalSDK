@@ -14,6 +14,8 @@ public enum VTGTextPlaneStatus: Equatable {
     /// older SDK builds.
     case other(String)
 
+    /// Parses an advertised text-plane value, preserving unrecognized ones
+    /// so a newer terminal stays observable to an older SDK build.
     public init(_ rawValue: String?) {
         switch rawValue?.lowercased() {
         case "reserved":
@@ -25,6 +27,7 @@ public enum VTGTextPlaneStatus: Equatable {
         }
     }
 
+    /// The value as it appears on the wire.
     public var rawValue: String {
         switch self {
         case .reserved:
@@ -91,6 +94,7 @@ public struct VTGCapabilities: Equatable {
     /// Raw text-plane status value advertised for layer `0`.
     public var textPlane: String?
 
+    /// The advertised text-plane value, parsed.
     public var textPlaneStatus: VTGTextPlaneStatus {
         VTGTextPlaneStatus(textPlane)
     }
@@ -116,6 +120,8 @@ public struct VTGCapabilities: Equatable {
     /// Raw capabilities response for diagnostics and forward compatibility.
     public var rawResponse: String
 
+    /// Creates a capability set. Every field defaults to unadvertised, which
+    /// is what an absent response means.
     public init(
         protocolName: String? = nil,
         schema: String? = nil,
