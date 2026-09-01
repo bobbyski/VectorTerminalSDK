@@ -17,6 +17,26 @@ extension VectorTerminalCanvas {
         send("startFrame,id=\(id),timeout=\(timeout)")
     }
 
+    /// Tell the terminal the app is finished, so it stops replying.
+    ///
+    /// Call this last, before restoring the terminal and exiting. VTG replies
+    /// — a frame acknowledgement, a capabilities answer — are only meaningful
+    /// to the app that asked. Once the app is gone, anything still on its way
+    /// is delivered to whatever owns the terminal next, which is the user's
+    /// shell, and a shell treats what it is given as typed input:
+    ///
+    ///     ❯ myappVTG;frameStarted,id=chrome,timeout=250
+    ///
+    /// After this the terminal still *applies* what it is sent — a departing
+    /// app's `clear()` still takes effect — it simply stops answering.
+    ///
+    /// A terminal cannot be told this by an app that was killed rather than
+    /// asked to stop, so hosts also stop answering on their own once they see
+    /// the program has gone. This is the polite half of that.
+    public func detach() {
+        send("detach")
+    }
+
     /// Commit a pending offscreen graphics frame into the visible VTG scene.
     public func endFrame(id: String) {
         guard isValidVTGIdentifier(id) else {
