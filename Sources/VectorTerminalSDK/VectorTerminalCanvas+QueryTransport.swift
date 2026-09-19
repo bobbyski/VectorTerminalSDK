@@ -7,7 +7,7 @@ import Foundation
 
 /// Low-level APC response transport used by synchronous VTG queries.
 extension VectorTerminalCanvas {
-    func readAPCResponse(timeoutMilliseconds: Int) -> [UInt8]? {
+    func readAPCResponse(timeoutMilliseconds: Int, limit: Int = 8192) -> [UInt8]? {
         var pollFD = pollfd(fd: input.fileDescriptor, events: Int16(POLLIN), revents: 0)
         var collected: [UInt8] = []
         let deadline = Date().addingTimeInterval(Double(timeoutMilliseconds) / 1000)
@@ -29,7 +29,7 @@ extension VectorTerminalCanvas {
                collected[collected.count - 1] == UInt8(ascii: "\\") {
                 return collected
             }
-            if collected.count > 8192 {
+            if collected.count > limit {
                 return collected
             }
         }

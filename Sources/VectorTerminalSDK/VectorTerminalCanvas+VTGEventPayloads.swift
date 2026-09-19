@@ -75,8 +75,9 @@ extension VectorTerminalCanvas {
 
     /// Parse graphics-only offscreen frame lifecycle responses.
     func parseVTGFrameEvent(from response: String) -> VTGFrameEvent? {
-        guard let type = ["frameStarted", "frameCommitted", "frameCanceled", "frameTimeout", "frameRejected"]
-            .first(where: { response.contains("_VTG;\($0)") }) else {
+        guard let name = vtgResponseName(response),
+              let type = ["frameStarted", "frameCommitted", "frameCanceled", "frameTimeout", "frameRejected"]
+                .first(where: { $0 == name }) else {
             return nil
         }
         let values = vtgFields(from: response)

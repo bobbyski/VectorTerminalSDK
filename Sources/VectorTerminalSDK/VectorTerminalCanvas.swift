@@ -17,6 +17,15 @@ public final class VectorTerminalCanvas: VectorTerminalSDKProtocol {
     /// Optional hook used by demos to surface parser details during debugging.
     public var eventDebugHandler: ((String) -> Void)?
 
+    /// Receives VTG Page Mode and rich-text events — `pageOpened`,
+    /// `pageGrew`, `pageScrolled`, `pageEnded`, errors and rejections — as the
+    /// event readers encounter them.
+    ///
+    /// A separate channel rather than a new ``VectorTerminalEvent`` case, so
+    /// adding page mode breaks no existing `switch` over events. Called on the
+    /// thread that reads events.
+    public var pageEventHandler: ((VTGPageEvent) -> Void)?
+
     /// Default graphics layer used by VTG commands that omit `layer:`.
     ///
     /// Assigning this property updates the terminal's retained VTG session
