@@ -154,26 +154,26 @@ public struct VTGPageState: Equatable {
     }
 }
 
-public extension VTGCapabilities {
+extension VTGCapabilities {
     /// Page Mode features the terminal advertises in `page=`. Empty when the
     /// terminal has no page mode.
-    var pageFeatures: [String] {
+    public var pageFeatures: [String] {
         Self.pipeField("page", in: rawResponse)
     }
 
     /// Rich-text features the terminal advertises in `text=`.
-    var textFeatures: [String] {
+    public var textFeatures: [String] {
         Self.pipeField("text", in: rawResponse)
     }
 
     /// Whether the terminal supports VTG Page Mode. Check this before
     /// ``VectorTerminalCanvas/beginPageMode(id:stacking:)``.
-    var supportsPageMode: Bool {
+    public var supportsPageMode: Bool {
         pageFeatures.contains("buffers2")
     }
 
     /// Whether the terminal draws `styledText`, `attrText`, and `textBox`.
-    var supportsRichText: Bool {
+    public var supportsRichText: Bool {
         textFeatures.contains("styled")
     }
 
