@@ -75,6 +75,34 @@ struct PageModeDispatchTests {
     }
 }
 
+extension PageModeDispatchTests {
+    /// Page coordinates ride along on mouse events over a visible page.
+    @Test func mouseEventsCarryPageCoordinates() {
+        let harness = EventHarness()
+        defer { harness.close() }
+
+        harness.write(apc("mouse,type=click,button=0,x=412,y=318,cellX=42,cellY=17,mods=none,hit=go,target=button,page=doc,pageX=412,pageY=1318,pageLayer=ui"))
+        guard case .mouse(let mouse) = harness.canvas.readEvent(timeoutMilliseconds: 100) else {
+            Issue.record("expected a mouse event")
+            return
+        }
+        #expect(mouse.pageID == "doc")
+        #expect(mouse.pageX == 412)
+        #expect(mouse.pageY == 1318)
+        #expect(mouse.pageLayer == "ui")
+        #expect(mouse.hitID == "go")
+
+        // Without a page, the fields stay absent rather than zero.
+        harness.write(apc("mouse,type=click,button=0,x=1,y=2,cellX=1,cellY=1,mods=none"))
+        guard case .mouse(let plain) = harness.canvas.readEvent(timeoutMilliseconds: 100) else {
+            Issue.record("expected a mouse event")
+            return
+        }
+        #expect(plain.pageID == nil)
+        #expect(plain.pageX == nil)
+    }
+}
+
 struct PageModeCommandTests {
     @Test func sessionAndPageCommands() {
         let output = CapturingOutput()

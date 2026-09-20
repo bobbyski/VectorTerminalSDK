@@ -50,6 +50,10 @@ extension VectorTerminalCanvas {
         let hitID = values["hit"]
         let targetID = values["target"]
         let viewportLayer = values["viewportLayer"].flatMap(Int.init)
+        let pageID = values["page"]
+        let pageX = values["pageX"].flatMap(Int.init)
+        let pageY = values["pageY"].flatMap(Int.init)
+        let pageLayer = values["pageLayer"]
         let virtualX = values["virtualX"].flatMap(Int.init)
         let virtualY = values["virtualY"].flatMap(Int.init)
         eventDebugHandler?("SDK parser accepted VTG mouse type=\(type) button=\(button) x=\(x) y=\(y) cell=\(cellX.map(String.init) ?? "?"),\(cellY.map(String.init) ?? "?") scroll=\(scrollX.map(String.init) ?? "?"),\(scrollY.map(String.init) ?? "?") hit=\(hitID ?? "none") target=\(targetID ?? "none") viewport=\(viewportLayer.map(String.init) ?? "none") virtual=\(virtualX.map(String.init) ?? "?"),\(virtualY.map(String.init) ?? "?") mods=\(modifiers) raw=\(response.debugEscapedForVTG)")
@@ -69,6 +73,10 @@ extension VectorTerminalCanvas {
             viewportLayer: viewportLayer,
             virtualX: virtualX,
             virtualY: virtualY,
+            pageID: pageID,
+            pageX: pageX,
+            pageY: pageY,
+            pageLayer: pageLayer,
             rawSequence: response
         )
     }

@@ -50,6 +50,16 @@ public struct VTGMouseEvent: Equatable {
     /// Mouse Y coordinate in fixed-viewport virtual space, when present.
     public var virtualY: Int?
 
+    /// The visible VTG page under the pointer, when one is shown.
+    public var pageID: String?
+
+    /// Pointer position in that page's own coordinates, scroll included.
+    public var pageX: Int?
+    public var pageY: Int?
+
+    /// The page layer whose hit region matched, when one did.
+    public var pageLayer: String?
+
     /// Raw VTG or ANSI escape sequence used to produce the event.
     public var rawSequence: String
 
@@ -71,6 +81,10 @@ public struct VTGMouseEvent: Equatable {
         viewportLayer: Int? = nil,
         virtualX: Int? = nil,
         virtualY: Int? = nil,
+        pageID: String? = nil,
+        pageX: Int? = nil,
+        pageY: Int? = nil,
+        pageLayer: String? = nil,
         rawSequence: String = ""
     ) {
         self.x = x
@@ -88,6 +102,10 @@ public struct VTGMouseEvent: Equatable {
         self.viewportLayer = viewportLayer
         self.virtualX = virtualX
         self.virtualY = virtualY
+        self.pageID = pageID
+        self.pageX = pageX
+        self.pageY = pageY
+        self.pageLayer = pageLayer
         self.rawSequence = rawSequence
     }
 
@@ -99,6 +117,9 @@ public struct VTGMouseEvent: Equatable {
         let viewportText = viewportLayer.flatMap { layer in
             virtualX.flatMap { vx in virtualY.map { vy in " viewport=\(layer) virtual=\(vx),\(vy)" } }
         } ?? ""
-        return "button=\(button) type=\(type) x=\(x) y=\(y)\(cellText)\(scrollText)\(hitText)\(viewportText) mods=\(modifiers) raw=\(rawSequence.debugEscapedForVTG)"
+        let pageText = pageID.flatMap { id in
+            pageX.flatMap { px in pageY.map { py in " page=\(id) at \(px),\(py)\(pageLayer.map { " layer=\($0)" } ?? "")" } }
+        } ?? ""
+        return "button=\(button) type=\(type) x=\(x) y=\(y)\(cellText)\(scrollText)\(hitText)\(viewportText)\(pageText) mods=\(modifiers) raw=\(rawSequence.debugEscapedForVTG)"
     }
 }
