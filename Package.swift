@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "VectorTerminalSDK",
     platforms: [
-        .macOS("16.0")
+        .macOS("15.0")
     ],
     products: [
         .library(name: "VectorTerminalSDK", targets: ["VectorTerminalSDK"]),
