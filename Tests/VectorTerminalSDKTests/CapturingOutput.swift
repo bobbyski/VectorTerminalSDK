@@ -11,4 +11,9 @@ final class CapturingOutput: VTGOutput {
     func write(_ data: Data) {
         self.data.append(data)
     }
+
+    /// Forget what has been written, so a test can assert on what comes next.
+    func reset() {
+        data.removeAll()
+    }
 }

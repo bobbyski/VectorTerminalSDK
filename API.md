@@ -233,6 +233,40 @@ canvas.rect(id: "menu-score", x: 180, y: 80, width: 160, height: 40, stroke: .gr
 
 `clear()` is the right reset point when entering a new screen, changing modes, or recovering from a state mismatch. After a `clear()`, any IDs your app still has in memory refer to objects that are no longer on the terminal screen. Send fresh drawing commands before expecting `delete(id:)`, `setLayer(id:)`, sprite transforms, or hit-region events for those objects to have visible meaning.
 
+## Raster Mode
+
+For simulators of machines that had one framebuffer: `enterRasterMode()` makes
+the terminal paint drawing commands **into the text plane** and keep nothing.
+
+```swift
+public func enterRasterMode()
+public func leaveRasterMode()
+public func setRasterMode(_ enabled: Bool)
+public var isInRasterMode: Bool { get }
+```
+
+Nothing else about the protocol changes. The same commands are sent, ids
+included; the terminal paints them and forgets them, so an existing program
+turns the mode on, draws as it always did, and turns it off.
+
+| | Retained scene (default) | Raster mode |
+|---|---|---|
+| Where it draws | overlay layers `1…4` | the text plane, with the text |
+| What is kept | objects, by `id` | pixels |
+| Erasing | `delete(id:)`, or redraw the same id | clear the screen and draw again |
+| Scrolling | the layer scrolls, or does not | scrolls with the text, and is gone off the top |
+| Text over it | text is a separate plane | text overwrites the pixels under it |
+
+While it is on, `delete(id:)`, `setLayer(id:)`, sprite transforms and hit
+regions have no retained object to act on, and redrawing an id paints again
+rather than replacing. Switching either way clears the retained scene, so
+nothing is left on screen that can no longer be addressed.
+
+**It is the lesser mode**, and it exists for fidelity: a retained circle
+survives a scroll and waits to be deleted by id, which is not how the machine
+being simulated behaved. Anything that does not need that fidelity should stay
+with the retained scene.
+
 ## Drawing Primitives
 
 All drawing calls create or replace retained primitives. Reusing the same `id` updates the existing primitive.

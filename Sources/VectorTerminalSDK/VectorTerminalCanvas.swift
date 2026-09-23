@@ -13,6 +13,9 @@ public final class VectorTerminalCanvas: VectorTerminalSDKProtocol {
     let isEnabled: Bool
     var storedDefaultLayer = VTGLayer.defaultOverlay
     var retainedStringObjectIDs: [String: [String]] = [:]
+    /// Whether the terminal is painting into the text plane without retaining
+    /// objects — see `VectorTerminalCanvas+RasterMode`.
+    var isRasterMode = false
 
     /// Optional hook used by demos to surface parser details during debugging.
     public var eventDebugHandler: ((String) -> Void)?
