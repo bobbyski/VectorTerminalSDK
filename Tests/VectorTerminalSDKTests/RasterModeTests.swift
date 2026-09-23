@@ -10,7 +10,7 @@ struct RasterModeTests {
         canvas.enterRasterMode()
         canvas.leaveRasterMode()
 
-        #expect(output.text == "\u{1B}_VTG;rasterMode,on=1\u{1B}\\\u{1B}_VTG;rasterMode,on=0\u{1B}\\")
+        #expect(output.text == "\u{1B}_VTG;rasterMode,enabled=1\u{1B}\\\u{1B}_VTG;rasterMode,enabled=0\u{1B}\\")
     }
 
     /// Nothing else about the protocol changes: the same drawing command, with
@@ -44,6 +44,6 @@ struct RasterModeTests {
 
         canvas.leaveRasterMode()
         #expect(!canvas.isInRasterMode)
-        #expect(output.text == "\u{1B}_VTG;rasterMode,on=0\u{1B}\\")
+        #expect(output.text == "\u{1B}_VTG;rasterMode,enabled=0\u{1B}\\")
     }
 }

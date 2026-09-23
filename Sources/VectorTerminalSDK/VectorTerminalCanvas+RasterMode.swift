@@ -51,7 +51,7 @@ extension VectorTerminalCanvas {
             return
         }
         isRasterMode = enabled
-        send("rasterMode,on=\(enabled ? 1 : 0)")
+        send("rasterMode,enabled=\(enabled ? 1 : 0)")
         // The terminal clears its scene on the switch; the ids this canvas is
         // still tracking refer to objects that no longer exist either way.
         retainedStringObjectIDs.removeAll()
