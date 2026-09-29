@@ -1,8 +1,11 @@
 import Foundation
-#if os(Linux)
-import Glibc
-#else
+#if canImport(Darwin)
 import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+// Static Linux (the musl SDK): the same C library under its own module name.
+import Musl
 #endif
 
 /// ANSI cursor movement and visibility helpers.
