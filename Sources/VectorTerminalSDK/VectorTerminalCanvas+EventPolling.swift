@@ -7,7 +7,7 @@ extension VectorTerminalCanvas {
     /// A zero timeout means "do not block"; a positive timeout waits for input
     /// up to that many milliseconds.
     public func readEvent(timeoutMilliseconds: Int = 0) -> VectorTerminalEvent? {
-        var pollFD = pollfd(fd: input.fileDescriptor, events: Int16(POLLIN), revents: 0)
+        var reader = TerminalInputReader(input)
         let deadline = Date().addingTimeInterval(Double(timeoutMilliseconds) / 1000)
 
         while true {
@@ -18,13 +18,12 @@ extension VectorTerminalCanvas {
                 remaining = Int32(max(0, Int(deadline.timeIntervalSinceNow * 1000)))
             }
 
-            let result = poll(&pollFD, 1, remaining)
+            let result = reader.wait(timeoutMilliseconds: remaining)
             if result <= 0 {
                 return nil
             }
 
-            var byte: UInt8 = 0
-            guard read(input.fileDescriptor, &byte, 1) == 1 else {
+            guard var byte = reader.readByte() else {
                 return nil
             }
 
@@ -43,13 +42,14 @@ extension VectorTerminalCanvas {
                 } else {
                     nextTimeout = Int32(max(1, Int(deadline.timeIntervalSinceNow * 1000)))
                 }
-                let nextResult = poll(&pollFD, 1, nextTimeout)
+                let nextResult = reader.wait(timeoutMilliseconds: nextTimeout)
                 if nextResult <= 0 {
                     return nil
                 }
-                guard read(input.fileDescriptor, &byte, 1) == 1 else {
+                guard let next = reader.readByte() else {
                     return nil
                 }
+                byte = next
                 escapeBuffer.append(byte)
             }
             if let event = parseEscapeEvent(escapeBuffer) {

@@ -5,6 +5,8 @@ import Glibc
 #elseif canImport(Musl)
 // Static Linux (the musl SDK): the same C library under its own module name.
 import Musl
+#elseif os(Windows)
+import WinSDK
 #endif
 import Foundation
 
@@ -17,6 +19,21 @@ extension VectorTerminalCanvas {
     /// the text grid doing?". When the terminal reports pixel dimensions
     /// through `TIOCGWINSZ`, those are included too.
     public func queryTerminalCellSize() -> TerminalCellSize? {
+        #if os(Windows)
+        // The console's visible window, in cells. A Windows console does not
+        // say how big a cell is in pixels, so those stay nil and the callers
+        // fall back as they do for any terminal that does not report them.
+        var info = CONSOLE_SCREEN_BUFFER_INFO()
+        guard GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info) else {
+            return nil
+        }
+        let columns = Int(info.srWindow.Right) - Int(info.srWindow.Left) + 1
+        let rows = Int(info.srWindow.Bottom) - Int(info.srWindow.Top) + 1
+        guard columns > 0, rows > 0 else {
+            return nil
+        }
+        return TerminalCellSize(columns: columns, rows: rows, pixelWidth: nil, pixelHeight: nil)
+        #else
         var windowSize = winsize()
         guard ioctl(input.fileDescriptor, UInt(TIOCGWINSZ), &windowSize) == 0,
               windowSize.ws_col > 0,
@@ -31,6 +48,7 @@ extension VectorTerminalCanvas {
             pixelWidth: pixelWidth,
             pixelHeight: pixelHeight
         )
+        #endif
     }
 
     /// Calculate the pixel width and height of a normal terminal `W`.

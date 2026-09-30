@@ -12,7 +12,7 @@ public final class VectorTerminalSession {
     /// Which terminal states `start()` applies and `end()` restores.
     public let options: VectorTerminalSessionOptions
 
-    private var originalMode: termios?
+    private var originalMode: TerminalMode?
     private var isActive = false
     private let inputDrainGraceMilliseconds = 80
 

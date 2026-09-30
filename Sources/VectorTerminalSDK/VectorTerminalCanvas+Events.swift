@@ -7,16 +7,16 @@ extension VectorTerminalCanvas {
     /// rely on resize push events still learn about canvas changes.
     public func events(canvasPollInterval: TimeInterval = 0.5) -> AsyncStream<VectorTerminalEvent> {
         AsyncStream { continuation in
-            let inputFD = input.fileDescriptor
+            let input = TerminalInputReader(input)
             let canvas = self
             let task = Task.detached {
                 var escapeBuffer: [UInt8] = []
                 var collectingEscape = false
                 var lastCanvasPoll = Date.distantPast
+                var reader = input
 
                 while !Task.isCancelled {
-                    var pollFD = pollfd(fd: inputFD, events: Int16(POLLIN), revents: 0)
-                    let result = poll(&pollFD, 1, 100)
+                    let result = reader.wait(timeoutMilliseconds: 100)
 
                     if result <= 0 {
                         if Date().timeIntervalSince(lastCanvasPoll) >= canvasPollInterval {
@@ -29,8 +29,7 @@ extension VectorTerminalCanvas {
                         continue
                     }
 
-                    var byte: UInt8 = 0
-                    guard read(inputFD, &byte, 1) == 1 else {
+                    guard let byte = reader.readByte() else {
                         continue
                     }
 
