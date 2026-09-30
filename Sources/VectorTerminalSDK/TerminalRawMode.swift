@@ -42,8 +42,11 @@ func enableRawMode() -> TerminalMode? {
                                 inputCodePage: GetConsoleCP(), outputCodePage: GetConsoleOutputCP())
 
     let cooked = DWORD(ENABLE_LINE_INPUT) | DWORD(ENABLE_ECHO_INPUT) | DWORD(ENABLE_PROCESSED_INPUT)
-        | DWORD(ENABLE_MOUSE_INPUT) | DWORD(ENABLE_QUICK_EDIT_MODE)
-    let raw = (inputMode & ~cooked)
+        | DWORD(ENABLE_QUICK_EDIT_MODE)
+    // Mouse records too: a console that reports the mouse as records rather
+    // than VT sequences (Wine's) reports nothing without this, and the reader
+    // turns the records into SGR reports.
+    let raw = (inputMode & ~cooked) | DWORD(ENABLE_MOUSE_INPUT)
         | DWORD(ENABLE_VIRTUAL_TERMINAL_INPUT) | DWORD(ENABLE_EXTENDED_FLAGS) | DWORD(ENABLE_WINDOW_INPUT)
     guard SetConsoleMode(input, raw) else {
         return nil
