@@ -29,6 +29,13 @@ public final class VectorTerminalCanvas: VectorTerminalSDKProtocol {
     /// thread that reads events.
     public var pageEventHandler: ((VTGPageEvent) -> Void)?
 
+    /// Told about each sprite command that was refused: by the terminal, once
+    /// ``enableErrorEvents()`` has asked it to say, and by the SDK when it will
+    /// not send one. A separate channel, like ``pageEventHandler``, so no
+    /// existing `switch` over events breaks. Called on the thread that reads
+    /// events, or the one that sent the command.
+    public var commandRejectedHandler: ((VTGCommandRejection) -> Void)?
+
     /// Default graphics layer used by VTG commands that omit `layer:`.
     ///
     /// Assigning this property updates the terminal's retained VTG session

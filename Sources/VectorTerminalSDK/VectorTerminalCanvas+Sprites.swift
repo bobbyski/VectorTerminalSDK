@@ -18,8 +18,11 @@ extension VectorTerminalCanvas {
         anchorY: Double = 0.5,
         layer: Int? = nil
     ) {
-        guard isValidVTGIdentifier(id), isValidVTGIdentifier(imageID) else {
-            return
+        guard isValidVTGIdentifier(id) else {
+            return refuse("sprite", id: id, "badId")
+        }
+        guard isValidVTGIdentifier(imageID) else {
+            return refuse("sprite", id: id, "unknownAsset")
         }
         send("sprite,id=\(id),image=\(imageID),x=\(x),y=\(y),rotation=\(vtgNumber(rotation)),scale=\(vtgNumber(scale)),anchorX=\(vtgNumber(clampedUnit(anchorX))),anchorY=\(vtgNumber(clampedUnit(anchorY)))\(layerParameter(layer))")
     }

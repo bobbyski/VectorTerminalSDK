@@ -338,6 +338,8 @@ extension VectorTerminalCanvas {
             }
             if VTGPageEvent.isPageEventName(name) {
                 pageEventHandler?(VTGPageEvent(name: name, fields: vtgFields(from: response), rawResponse: response))
+            } else {
+                _ = dispatchCommandRejected(name, response: response)
             }
         }
         return nil

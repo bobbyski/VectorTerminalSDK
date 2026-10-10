@@ -14,7 +14,7 @@ extension VectorTerminalCanvas {
         filter: VTGSpriteFilter = .smooth
     ) {
         guard isValidVTGIdentifier(id) else {
-            return
+            return refuse("spriteUpload", id: id, "badId")
         }
         send("spriteUpload,id=\(id),format=png,width=\(width),height=\(height),filter=\(filter.rawValue)", payload: pngData.base64EncodedString())
     }
@@ -28,7 +28,7 @@ extension VectorTerminalCanvas {
         filter: VTGSpriteFilter = .smooth
     ) {
         guard isValidVTGIdentifier(id) else {
-            return
+            return refuse("spriteUpload", id: id, "badId")
         }
         send("spriteUpload,id=\(id),format=jpeg,width=\(width),height=\(height),filter=\(filter.rawValue)", payload: jpegData.base64EncodedString())
     }
@@ -48,7 +48,7 @@ extension VectorTerminalCanvas {
         lineWidth: Double = 1
     ) {
         guard isValidVTGIdentifier(id) else {
-            return
+            return refuse("vectorSpriteUpload", id: id, "badId")
         }
         send("vectorSpriteUpload,id=\(id),width=\(width),height=\(height)\(colorParameter("stroke", stroke))\(colorParameter("fill", fill)),lineWidth=\(vtgNumber(lineWidth))", payload: path)
     }
@@ -69,12 +69,17 @@ extension VectorTerminalCanvas {
         transparentIndex: Int? = nil,
         filter: VTGSpriteFilter = .nearest
     ) {
-        guard isValidVTGIdentifier(id),
-              width > 0,
-              height > 0,
-              pixels.count == width * height,
-              palette.isEmpty == false else {
-            return
+        guard isValidVTGIdentifier(id) else {
+            return refuse("spriteDataUpload", id: id, "badId")
+        }
+        guard width > 0, height > 0 else {
+            return refuse("spriteDataUpload", id: id, "badSize")
+        }
+        guard palette.isEmpty == false else {
+            return refuse("spriteDataUpload", id: id, "badPalette")
+        }
+        guard pixels.count == width * height else {
+            return refuse("spriteDataUpload", id: id, "badData")
         }
         let palettePayload = palette.map(\.rawValue).joined(separator: "|")
         let transparent = transparentIndex.map { ",transparent=\($0)" } ?? ""

@@ -180,7 +180,7 @@ public func present()
 public func delete(id: String)
 ```
 
-`clear()` removes all retained VTG primitives. `present()` is a presentation hint. `delete(id:)` removes a single retained primitive by id.
+`clear()` removes all retained VTG primitives, placed sprites included. Uploaded sprite assets stay, so they can be placed again without re-uploading; `clearSprites()` and `removeSprite(id:)` delete them. `present()` is a presentation hint. `delete(id:)` removes a single retained primitive by id.
 
 ### Object IDs And Retained State
 
@@ -670,6 +670,32 @@ public func clearSprites()
 ```
 
 Removes one uploaded sprite asset and dependent instances, or removes all sprite assets and instances.
+
+Sprite asset and instance ids are ASCII letters, digits, `-` and `_`, up to 64 characters. The terminal keeps at most 256 assets.
+
+### Refused Sprite Commands
+
+```swift
+public var commandRejectedHandler: ((VTGCommandRejection) -> Void)?
+public func enableErrorEvents()
+public func disableErrorEvents()
+
+public struct VTGCommandRejection: Equatable {
+    public var command: String      // "spriteUpload", "sprite", …
+    public var id: String
+    public var reason: String       // badId, limit, badData, badFormat, badSize, badPalette, unknownAsset
+    public var fromTerminal: Bool
+}
+```
+
+A refused sprite command otherwise fails silently: the picture just never appears. `commandRejectedHandler` is told about each one. The SDK reports the commands it refuses to send (a bad name, a pixel array the wrong size) straight away, with `fromTerminal == false`. The terminal's own refusals (a full asset store, undecodable image data, a `sprite` naming an asset that was never uploaded) arrive while reading events, once `enableErrorEvents()` has asked for them; they are off by default so a program that never reads replies has none arrive on its input. Like `pageEventHandler`, this is a separate channel rather than a `VectorTerminalEvent` case, so existing `switch` statements keep compiling.
+
+```swift
+canvas.commandRejectedHandler = { rejection in
+    log("\(rejection.command) \(rejection.id) refused: \(rejection.reason)")
+}
+canvas.enableErrorEvents()
+```
 
 ## Layers
 

@@ -45,6 +45,9 @@ extension VectorTerminalCanvas {
                 pageEventHandler?(VTGPageEvent(name: name, fields: vtgFields(from: response), rawResponse: response))
                 return nil
             }
+            if dispatchCommandRejected(name, response: response) {
+                return nil
+            }
         }
         if let mouse = parseMouseEvent(bytes) {
             return .mouse(mouse)
