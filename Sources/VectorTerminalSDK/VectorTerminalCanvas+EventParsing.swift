@@ -48,6 +48,9 @@ extension VectorTerminalCanvas {
             if dispatchCommandRejected(name, response: response) {
                 return nil
             }
+            if dispatchKeyEvent(name, response: response) {
+                return nil
+            }
         }
         if let mouse = parseMouseEvent(bytes) {
             return .mouse(mouse)
