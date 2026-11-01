@@ -1,6 +1,13 @@
 // swift-tools-version: 5.9
 
 import PackageDescription
+import Foundation
+
+// ACTIVEUI_STATIC (ActiveUI's convention, set for Linux builds through XCompile):
+// XCompile links the Swift runtime statically on glibc, and a dynamic library
+// cannot be built against a static runtime, so the library goes static there.
+// `getenv`, not `ProcessInfo`: swift.org 6.3.1 crashes on a manifest that reads it.
+let libraryType: Product.Library.LibraryType = getenv("ACTIVEUI_STATIC") != nil ? .static : .dynamic
 
 let package = Package(
     name: "VectorTerminalSDK",
@@ -15,7 +22,7 @@ let package = Package(
         // `libTUIKit.dylib` *and* into BASIC's `libBASICRTHost.a`, and a
         // program linking both got two copies of every class, which the
         // Objective-C runtime reports on stderr.
-        .library(name: "VectorTerminalSDK", type: .dynamic, targets: ["VectorTerminalSDK"]),
+        .library(name: "VectorTerminalSDK", type: libraryType, targets: ["VectorTerminalSDK"]),
         .executable(name: "VectorTerminalSDKDemo", targets: ["VectorTerminalSDKDemo"])
     ],
     targets: [
