@@ -18,6 +18,10 @@ extension VectorTerminalCanvas {
     /// pixels answer "where can I draw?", while terminal cells answer "what is
     /// the text grid doing?". When the terminal reports pixel dimensions
     /// through `TIOCGWINSZ`, those are included too.
+    ///
+    /// On Windows this is the console's visible window, and the pixel sizes stay nil.
+    ///
+    /// - Returns: The grid size, or nil when the input is not a terminal or reports a zero size.
     public func queryTerminalCellSize() -> TerminalCellSize? {
         #if os(Windows)
         // The console's visible window, in cells. A Windows console does not
@@ -59,6 +63,9 @@ extension VectorTerminalCanvas {
     /// fields and finally to dividing the VTG pixel canvas by terminal rows and
     /// columns. Traditional terminals that do not support VTG and do not report
     /// pixel dimensions return `nil`.
+    ///
+    /// - Parameter timeoutMilliseconds: How long to wait for each VTG query's reply. Defaults to 750.
+    /// - Returns: The cell size in terminal pixels, or nil when no source gives one.
     public func queryTerminalWSize(timeoutMilliseconds: Int = 750) -> TerminalGlyphSize? {
         if let glyphSize = queryTerminalGlyphSize(timeoutMilliseconds: timeoutMilliseconds) {
             return glyphSize

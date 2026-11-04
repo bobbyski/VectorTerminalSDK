@@ -8,6 +8,8 @@ import Foundation
 /// the SDK generate the same VTG wire protocol in both cases.
 public protocol VTGOutput: AnyObject {
     /// Write raw terminal bytes to the destination.
+    ///
+    /// - Parameter data: The bytes to write, unchanged.
     func write(_ data: Data)
 }
 
@@ -22,11 +24,15 @@ public final class ClosureVTGOutput: VTGOutput {
     private let writer: (Data) -> Void
 
     /// Wraps a closure that delivers bytes to the host terminal.
+    ///
+    /// - Parameter writer: Called with every chunk of bytes the canvas writes.
     public init(_ writer: @escaping (Data) -> Void) {
         self.writer = writer
     }
 
     /// Hands `data` to the closure.
+    ///
+    /// - Parameter data: The bytes to pass to the closure.
     public func write(_ data: Data) {
         writer(data)
     }

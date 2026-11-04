@@ -46,6 +46,11 @@ extension VectorTerminalCanvas {
     }
 
     /// Set raster mode directly, for code that carries the flag in a variable.
+    ///
+    /// Sends `rasterMode,enabled=1` or `0` and forgets tracked ids. Asking for
+    /// the mode the canvas is already in sends nothing.
+    ///
+    /// - Parameter enabled: True to turn raster mode on, false to turn it off.
     public func setRasterMode(_ enabled: Bool) {
         guard enabled != isRasterMode else {
             return

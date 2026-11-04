@@ -8,6 +8,12 @@ import Foundation
 extension VectorTerminalCanvas {
     /// Define or replace a named style. Styles last for the session and are
     /// unaffected by `clear()`.
+    ///
+    /// Sends `textStyle,id=...`. Nothing is sent when the style has no `id`
+    /// or the id is not a valid VTG identifier; an invalid `inherit` is
+    /// left out.
+    ///
+    /// - Parameter style: The style to define; its `id` names it.
     public func defineTextStyle(_ style: VTGTextStyle) {
         guard let id = style.id, isValidVTGIdentifier(id) else {
             return
@@ -21,6 +27,21 @@ extension VectorTerminalCanvas {
     }
 
     /// Draw one run of text in any font and size.
+    ///
+    /// Sends `styledText,id=...`. Newlines are removed from `value`. Nothing
+    /// is sent when `id` is not a valid VTG identifier.
+    ///
+    /// - Parameters:
+    ///   - id: The retained primitive id; drawing again with the same id replaces it.
+    ///   - x: Anchor x, in pixels.
+    ///   - y: Anchor y, in pixels; `baseline` says which part of the text it is.
+    ///   - value: The text, on one line.
+    ///   - style: A named style (by `id`) and inline attributes that override it.
+    ///   - align: Horizontal alignment around `x`, or `nil` for the host default (`left`).
+    ///   - baseline: What `y` means, or `nil` for the host default (`top`).
+    ///   - angle: Rotation, in degrees; `nil` or zero sends nothing.
+    ///   - maxWidth: Width to wrap at, in pixels; `nil` or zero or less sends nothing.
+    ///   - layer: The target layer, or `nil` for the default layer.
     public func styledText(
         id: String,
         x: Int,
@@ -46,6 +67,24 @@ extension VectorTerminalCanvas {
 
     /// Draw attributed text. Lines break only where the text has newlines,
     /// unless `maxWidth` is given.
+    ///
+    /// Sends `attrText,id=...` with the runs as payload. The style's own
+    /// `lineHeight` is not sent; use the `lineHeight` parameter. Nothing is
+    /// sent when `id` is not a valid VTG identifier.
+    ///
+    /// - Parameters:
+    ///   - id: The retained primitive id; drawing again with the same id replaces it.
+    ///   - x: Anchor x, in pixels.
+    ///   - y: Anchor y, in pixels; `baseline` says which part of the text it is.
+    ///   - text: The attributed runs.
+    ///   - style: The base style for `-` runs: a named style (by `id`) and
+    ///     inline attributes that override it.
+    ///   - align: Horizontal alignment around `x`, or `nil` for the host default (`left`).
+    ///   - baseline: What `y` means, or `nil` for the host default (`top`).
+    ///   - angle: Rotation, in degrees; `nil` or zero sends nothing.
+    ///   - maxWidth: Width to wrap at, in pixels; `nil` or zero or less sends nothing.
+    ///   - lineHeight: Distance between baselines, in pixels; `nil` or zero or less sends nothing.
+    ///   - layer: The target layer, or `nil` for the default layer.
     public func attributedText(
         id: String,
         x: Int,
@@ -72,8 +111,28 @@ extension VectorTerminalCanvas {
 
     /// Draw attributed text wrapped inside a rectangle.
     ///
-    /// - Parameter height: The box height, or `nil` to grow to fit — which,
-    ///   in a page with a growable height, grows the page too.
+    /// Sends `textBox,id=...` with the runs as payload. The style's own
+    /// `lineHeight` is not sent; use the `lineHeight` parameter. Nothing is
+    /// sent when `id` is not a valid VTG identifier.
+    ///
+    /// - Parameters:
+    ///   - id: The retained primitive id; drawing again with the same id replaces it.
+    ///   - x: Left edge of the box, in pixels.
+    ///   - y: Top edge of the box, in pixels.
+    ///   - width: Box width, in pixels; at least 1.
+    ///   - height: The box height, or `nil` to grow to fit — which,
+    ///     in a page with a growable height, grows the page too.
+    ///     Negative values become zero.
+    ///   - text: The attributed runs.
+    ///   - style: The base style for `-` runs: a named style (by `id`) and
+    ///     inline attributes that override it.
+    ///   - align: Horizontal alignment inside the box, or `nil` for `left`.
+    ///   - verticalAlign: Vertical placement inside the box, or `nil` for `top`.
+    ///   - wrap: How lines break, or `nil` for the host default.
+    ///   - overflow: What happens to text past the height, or `nil` for `clip`.
+    ///   - inset: Padding on every side, in pixels; `nil` or zero or less sends nothing.
+    ///   - lineHeight: Distance between baselines, in pixels; `nil` or zero or less sends nothing.
+    ///   - layer: The target layer, or `nil` for the default layer.
     public func textBox(
         id: String,
         x: Int,
@@ -107,6 +166,22 @@ extension VectorTerminalCanvas {
 
     /// Measure text exactly as the host would lay it out. Pass `width` to
     /// measure it wrapped in a box of that width.
+    ///
+    /// Sends `textMeasure?` and waits for the `textMeasure` response.
+    ///
+    /// - Parameters:
+    ///   - text: The attributed runs to measure.
+    ///   - style: The base style for `-` runs.
+    ///   - width: Box width, in pixels; `nil` or zero or less measures
+    ///     unwrapped attributed text instead of a box.
+    ///   - height: Box height, in pixels, or `nil` to grow to fit. Used only
+    ///     with `width`.
+    ///   - wrap: How lines break, or `nil` for the host default.
+    ///   - overflow: What happens to text past the height, or `nil` for `clip`.
+    ///   - lineHeight: Distance between baselines, in pixels; `nil` or zero or less sends nothing.
+    ///   - timeoutMilliseconds: How long to wait for the response.
+    /// - Returns: The measurement, or `nil` when graphics are disabled, the
+    ///   host does not answer in time, or the response lacks a width or height.
     public func measureText(
         _ text: VTGAttributedText,
         style: VTGTextStyle = VTGTextStyle(),
@@ -146,6 +221,13 @@ extension VectorTerminalCanvas {
     }
 
     /// Font families the host can draw with, and what `sans` resolves to.
+    ///
+    /// Sends `fonts?` and waits for the `fonts` response.
+    ///
+    /// - Parameter timeoutMilliseconds: How long to wait for the response.
+    /// - Returns: The default family (`sans` when unreported) and the family
+    ///   list (empty when unreported), or `nil` when graphics are disabled or
+    ///   the host does not answer in time.
     public func queryFonts(timeoutMilliseconds: Int = 750) -> (defaultFamily: String, families: [String])? {
         guard let response = queryNamed("fonts?", responseName: "fonts", timeoutMilliseconds: timeoutMilliseconds) else {
             return nil

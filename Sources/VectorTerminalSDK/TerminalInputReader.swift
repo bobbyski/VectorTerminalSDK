@@ -22,34 +22,50 @@ import Foundation
 /// platform (TUIKit's driver does, on Windows).
 public struct TerminalInputReader: @unchecked Sendable {
     #if os(Windows)
+    /// A reader for the console's standard input.
+    ///
+    /// - Parameter input: Ignored on Windows: the reader always uses the console's standard input.
     public init(_ input: FileHandle = .standardInput) {}
 
     /// Waits up to `timeoutMilliseconds` for a byte; a negative timeout waits
-    /// for ever. Answers as `poll` does: 1 when a byte is ready, 0 on timeout,
+    /// forever. Answers as `poll` does: 1 when a byte is ready, 0 on timeout,
     /// negative on error.
+    ///
+    /// - Parameter timeoutMilliseconds: How long to wait, in milliseconds; negative waits forever.
+    /// - Returns: 1 when a byte is ready, 0 on timeout, or a negative value on error.
     public mutating func wait(timeoutMilliseconds: Int32) -> Int32 {
         WindowsConsoleInput.shared.wait(timeoutMilliseconds: timeoutMilliseconds)
     }
 
     /// Reads one byte, or nil when none could be read.
+    ///
+    /// - Returns: The byte read, or nil when none could be read.
     public func readByte() -> UInt8? {
         WindowsConsoleInput.shared.readByte()
     }
     #else
     private var pollFD: pollfd
 
+    /// A reader for the given input.
+    ///
+    /// - Parameter input: The file handle to read. Defaults to standard input.
     public init(_ input: FileHandle = .standardInput) {
         pollFD = pollfd(fd: input.fileDescriptor, events: Int16(POLLIN), revents: 0)
     }
 
     /// Waits up to `timeoutMilliseconds` for a byte; a negative timeout waits
-    /// for ever. Answers as `poll` does: 1 when a byte is ready, 0 on timeout,
+    /// forever. Answers as `poll` does: 1 when a byte is ready, 0 on timeout,
     /// negative on error.
+    ///
+    /// - Parameter timeoutMilliseconds: How long to wait, in milliseconds; negative waits forever.
+    /// - Returns: 1 when a byte is ready, 0 on timeout, or a negative value on error.
     public mutating func wait(timeoutMilliseconds: Int32) -> Int32 {
         poll(&pollFD, 1, timeoutMilliseconds)
     }
 
     /// Reads one byte, or nil when none could be read.
+    ///
+    /// - Returns: The byte read, or nil when none could be read.
     public func readByte() -> UInt8? {
         var byte: UInt8 = 0
         return read(pollFD.fd, &byte, 1) == 1 ? byte : nil

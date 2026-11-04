@@ -23,6 +23,13 @@ public struct VTGFrameEvent: Equatable {
 
     /// Creates a frame event. `reason` and `timeoutMilliseconds` stay nil for
     /// the event types that do not carry them.
+    ///
+    /// - Parameters:
+    ///   - type: Lifecycle type, such as `frameStarted` or `frameCommitted`.
+    ///   - id: The app-provided frame id.
+    ///   - reason: The terminal's reason for a cancel, reject or timeout, or nil.
+    ///   - timeoutMilliseconds: The timeout a frame-start event reports, or nil.
+    ///   - rawResponse: The raw VTG frame response, for logs. Defaults to empty.
     public init(
         type: String,
         id: String,

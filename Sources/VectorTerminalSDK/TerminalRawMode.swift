@@ -118,6 +118,9 @@ public struct TerminalRawMode {
     private let original: TerminalMode
 
     /// Puts standard input into raw mode. Nil when it is not a terminal.
+    ///
+    /// - Returns: A value that restores the original settings, or nil when
+    ///     standard input is not a terminal (or not a console, on Windows).
     public static func enter() -> TerminalRawMode? {
         enableRawMode().map { TerminalRawMode(original: $0) }
     }

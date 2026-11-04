@@ -7,6 +7,11 @@ extension VectorTerminalCanvas {
     /// Layer 0 is reserved for the future shared text/graphics plane. Layers
     /// 1-4 currently render as ordered overlay layers, with layer 1 preserving
     /// the original VectorTerminal behavior.
+    ///
+    /// Sends `defaultLayer,layer=<n>` and records the value in
+    /// ``defaultLayer``. A layer outside `-1...4` is silently ignored.
+    ///
+    /// - Parameter layer: The new default layer, `-1...4`.
     public func setDefaultLayer(_ layer: Int) {
         guard isSupportedVTGLayer(layer) else {
             return
@@ -19,6 +24,13 @@ extension VectorTerminalCanvas {
     ///
     /// This updates layer metadata without redrawing the primitive. Unknown ids
     /// are ignored by the terminal.
+    ///
+    /// Sends `layer,id=<id>,layer=<n>`. An invalid id or a layer outside
+    /// `-1...4` drops the command.
+    ///
+    /// - Parameters:
+    ///   - id: The retained primitive id to move.
+    ///   - layer: The destination layer, `-1...4`.
     public func setLayer(id: String, layer: Int) {
         guard isValidVTGIdentifier(id), isSupportedVTGLayer(layer) else {
             return
@@ -31,6 +43,14 @@ extension VectorTerminalCanvas {
     /// This moves everything retained on the layer without changing object
     /// coordinates. Layer 0 is intentionally ignored in this first pass because
     /// text/graphics mingling needs the future SwiftTerm-hosted renderer.
+    ///
+    /// Sends `layerScroll,layer=<n>,x=<px>,y=<px>`. Only overlay layers
+    /// `1...4` are accepted; any other layer, including -1, is silently ignored.
+    ///
+    /// - Parameters:
+    ///   - layer: The overlay layer, `1...4`.
+    ///   - x: Horizontal offset, in pixels.
+    ///   - y: Vertical offset, in pixels.
     public func scrollLayer(_ layer: Int, x: Int, y: Int) {
         guard VTGLayer.isScrollable(layer) else {
             return
@@ -52,12 +72,21 @@ extension VectorTerminalCanvas {
     ///
     /// **Graphics are not kept in scrollback.** The anchor line is remembered
     /// even after it scrolls out of view, so returning to it is exact, but
-    /// nothing is rasterised per scrolled line.
+    /// nothing is rasterized per scrolled line.
     ///
     /// Applies to every layer including -1: `layerScroll` refuses the
     /// under-text plane, but anchoring is not scrolling — it says where the
     /// layer belongs in the document, and chrome drawn beneath its own text is
     /// exactly the case that needs it.
+    ///
+    /// Sends `layerAnchor,layer=<n>,mode=<screen|text>[,line=<n>]`. A layer
+    /// outside `-1...4` is silently ignored.
+    ///
+    /// - Parameters:
+    ///   - layer: The layer to anchor, `-1...4`.
+    ///   - mode: `.screen` pins to the viewport; `.text` pins to a buffer line.
+    ///   - line: The absolute buffer line for `.text` mode; `nil` means the
+    ///     line being written now. Ignored in `.screen` mode.
     public func setLayerAnchor(_ layer: Int, _ mode: VTGLayerAnchorMode, line: Int? = nil) {
         guard isSupportedVTGLayer(layer) else {
             return
@@ -75,6 +104,13 @@ extension VectorTerminalCanvas {
     /// entire layer without resending every retained primitive on that layer.
     /// Layer 0 is intentionally ignored until the shared text/graphics plane
     /// has renderer semantics for opacity.
+    ///
+    /// Sends `layerAlpha,layer=<n>,alpha=<0-1>`. Only overlay layers `1...4`
+    /// are accepted; any other layer, including -1, is silently ignored.
+    ///
+    /// - Parameters:
+    ///   - layer: The overlay layer, `1...4`.
+    ///   - alpha: Opacity multiplier, clamped to `0...1`.
     public func setLayerAlpha(_ layer: Int, alpha: Double) {
         guard VTGLayer.isScrollable(layer) else {
             return
@@ -87,6 +123,16 @@ extension VectorTerminalCanvas {
     /// Clipping is layer-scoped in this first pass. That keeps draw commands
     /// simple and gives demos a useful way to constrain parallax panes, HUDs,
     /// and sprite arenas before retained object groups exist.
+    ///
+    /// Sends `clip,layer=<n>,x=,y=,w=,h=`. A layer outside `-1...4`, or a
+    /// width or height that is not positive, drops the command.
+    ///
+    /// - Parameters:
+    ///   - layer: The layer to clip, `-1...4`.
+    ///   - x: Left edge of the clip, in pixels.
+    ///   - y: Top edge of the clip, in pixels.
+    ///   - width: Clip width, in pixels; must be positive.
+    ///   - height: Clip height, in pixels; must be positive.
     public func clipLayer(_ layer: Int, x: Int, y: Int, width: Int, height: Int) {
         guard isSupportedVTGLayer(layer), width > 0, height > 0 else {
             return
@@ -95,6 +141,11 @@ extension VectorTerminalCanvas {
     }
 
     /// Remove any rectangular clip from a graphics layer.
+    ///
+    /// Sends `clipClear,layer=<n>`. A layer outside `-1...4` is silently
+    /// ignored.
+    ///
+    /// - Parameter layer: The layer to unclip, `-1...4`.
     public func clearLayerClip(_ layer: Int) {
         guard isSupportedVTGLayer(layer) else {
             return
@@ -106,6 +157,11 @@ extension VectorTerminalCanvas {
     ///
     /// Hidden layers remain retained in the terminal. Turning graphics back on
     /// restores the existing scene without requiring the app to redraw it.
+    ///
+    /// Sends `graphicsVisible,enabled=<0|1>`. Hiding graphics also hides a
+    /// visible page; page mode stays active.
+    ///
+    /// - Parameter isVisible: `true` shows the graphics layers; `false` hides them.
     public func setGraphicsLayersVisible(_ isVisible: Bool) {
         send("graphicsVisible,enabled=\(isVisible ? 1 : 0)")
     }

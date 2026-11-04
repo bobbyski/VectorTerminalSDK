@@ -28,6 +28,8 @@ public protocol VectorTerminalSDKProtocol: AnyObject {
     func present()
 
     /// Delete one retained VTG primitive by id.
+    ///
+    /// - Parameter id: The retained primitive id; an invalid id sends nothing.
     func delete(id: String)
 
     // MARK: - Primitive Drawing
@@ -133,6 +135,10 @@ public protocol VectorTerminalSDKProtocol: AnyObject {
     func enableMouseReporting(mode: String)
     func disableMouseReporting()
     /// Enable link recognition and optionally decorate recognized terminal text.
+    ///
+    /// - Parameters:
+    ///   - decorate: When `true`, the terminal colors and underlines detected links.
+    ///   - color: The decoration color, or nil for the terminal's blue default.
     func enableLinkDetection(decorate: Bool, color: VTGColor?)
     /// Disable link recognition and activation.
     func disableLinkDetection()

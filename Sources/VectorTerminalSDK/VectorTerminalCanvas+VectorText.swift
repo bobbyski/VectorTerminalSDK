@@ -15,6 +15,11 @@ extension VectorTerminalCanvas {
     }
 
     /// Instance convenience wrapper for `VectorTerminalCanvas.vectorTextSize(...)`.
+    ///
+    /// - Parameters:
+    ///   - height: The requested glyph height, in pixels; heights under 7 measure as 7.
+    ///   - value: The text to measure; every Unicode scalar counts as one advance.
+    /// - Returns: The advance width and effective glyph height, in pixels.
     public nonisolated func vectorTextSize(height: Int, value: String) -> VTGTextSize {
         Self.vectorTextSize(height: height, value: value)
     }
@@ -24,6 +29,20 @@ extension VectorTerminalCanvas {
     /// This intentionally uses VTG `draw` segments rather than font rendering
     /// so demos can prove arbitrary vector primitives are enough for text-like
     /// output. Non-printing ASCII values render as a box with the numeric code.
+    ///
+    /// Each stroke is a retained `draw` primitive with the id
+    /// `<id>-<glyph>-<stroke>`. Primitives from the last call with the same
+    /// `id` are deleted first.
+    ///
+    /// - Parameters:
+    ///   - id: The base id for the emitted primitives.
+    ///   - x: Left edge of the first glyph, in pixels.
+    ///   - y: Top edge of the glyphs, in pixels.
+    ///   - height: Glyph height, in pixels; heights under 7 draw as 7.
+    ///   - value: The ASCII text to draw.
+    ///   - stroke: Stroke color.
+    ///   - width: Stroke width, in pixels.
+    ///   - layer: The target layer, or `nil` for the default layer.
     public func vectorPrint(
         id: String,
         x: Int,
@@ -87,6 +106,8 @@ extension VectorTerminalCanvas {
 
     /// Delete all retained primitives emitted by the last `vectorPrint(...)`
     /// call with this base id.
+    ///
+    /// - Parameter id: The base id passed to `vectorPrint(...)`.
     public func deleteVectorText(id: String) {
         deleteStringObjects(id: id)
     }

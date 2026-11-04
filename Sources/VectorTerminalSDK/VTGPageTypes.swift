@@ -16,6 +16,12 @@ public struct VTGPageEvent: Equatable {
     /// The complete response, for diagnostics.
     public var rawResponse: String
 
+    /// Create an event from its parsed parts.
+    ///
+    /// - Parameters:
+    ///   - name: The event name, such as `pageOpened`.
+    ///   - fields: Every `key=value` field of the event.
+    ///   - rawResponse: The complete response, for diagnostics; defaults to empty.
     public init(name: String, fields: [String: String], rawResponse: String = "") {
         self.name = name
         self.fields = fields
@@ -30,9 +36,11 @@ public struct VTGPageEvent: Equatable {
     public var slot: String? { fields["slot"] }
     /// Page extent, for `pageOpened`, `pageGrew`, and `pageResized`.
     public var width: Double? { fields["w"].flatMap(Double.init) }
+    /// Page height in pixels, for `pageOpened`, `pageGrew`, and `pageResized`.
     public var height: Double? { fields["h"].flatMap(Double.init) }
     /// Scroll origin, for `pageScrolled`.
     public var scrollX: Double? { fields["x"].flatMap(Double.init) }
+    /// Vertical scroll origin in page pixels, for `pageScrolled`.
     public var scrollY: Double? { fields["y"].flatMap(Double.init) }
 
     /// Whether a response name belongs to this channel.
@@ -65,21 +73,29 @@ public enum VTGPageStacking: String {
 public enum VTGPageResizePolicy: String {
     /// Axes sized from the window follow it; explicit sizes stay.
     case auto
+    /// Neither axis changes when the window resizes.
     case fixed
+    /// The width follows the window; the height stays.
     case followWidth
+    /// Both axes follow the window.
     case followViewport
 }
 
 /// Whether a page layer scrolls with the page or stays pinned to the view.
 public enum VTGPageLayerScrollMode: String {
+    /// Moves with the page's scroll offset. The default.
     case page
+    /// Pinned to the viewport, like a HUD over a scrolling document.
     case fixed
 }
 
 /// Which axes the user's wheel or trackpad scrolls.
 public enum VTGPageScrollAxis: String {
+    /// Horizontal and vertical.
     case both
+    /// Horizontal only.
     case x
+    /// Vertical only.
     case y
 }
 
@@ -93,36 +109,69 @@ public enum VTGPageLayerCopyMode: String {
 
 /// Where ordinary drawing commands go while page mode is active.
 public enum VTGPageDrawTarget: String {
+    /// The current page (sent as `scene=page`).
     case page
+    /// The ordinary VTG scene beneath the page (sent as `scene=base`).
     case base
 }
 
 /// An edge to scroll a page to.
 public enum VTGPageEdge: String {
+    /// Scroll to the top: vertical origin 0.
     case top
+    /// Scroll to the bottom of the page.
     case bottom
+    /// Scroll to the left: horizontal origin 0.
     case left
+    /// Scroll to the right edge of the page.
     case right
 }
 
 /// The answer to ``VectorTerminalCanvas/queryPageState(id:timeoutMilliseconds:)``.
 public struct VTGPageState: Equatable {
+    /// The page id.
     public var id: String
+    /// The buffer slot, `A` or `B`; empty if the terminal did not say.
     public var slot: String
+    /// Page width, in pixels.
     public var width: Double
+    /// Page height, in pixels.
     public var height: Double
+    /// Whether the width grows to fit what is drawn.
     public var growsWidth: Bool
+    /// Whether the height grows to fit what is drawn.
     public var growsHeight: Bool
+    /// Horizontal scroll origin, in page pixels.
     public var scrollX: Double
+    /// Vertical scroll origin, in page pixels.
     public var scrollY: Double
+    /// Whole-page opacity, `0...1`.
     public var alpha: Double
     /// `#RRGGBBAA`, or `none` for a transparent page.
     public var background: String
+    /// Whether the page is the one on screen.
     public var isVisible: Bool
     /// Layer ids in drawing order.
     public var layers: [String]
+    /// The complete `pageState` response, for diagnostics.
     public var rawResponse: String
 
+    /// Create a page state from its parts.
+    ///
+    /// - Parameters:
+    ///   - id: The page id.
+    ///   - slot: The buffer slot, `A` or `B`.
+    ///   - width: Page width, in pixels.
+    ///   - height: Page height, in pixels.
+    ///   - growsWidth: Whether the width grows to fit content.
+    ///   - growsHeight: Whether the height grows to fit content.
+    ///   - scrollX: Horizontal scroll origin, in page pixels.
+    ///   - scrollY: Vertical scroll origin, in page pixels.
+    ///   - alpha: Whole-page opacity, `0...1`.
+    ///   - background: `#RRGGBBAA`, or `none` for a transparent page.
+    ///   - isVisible: Whether the page is on screen.
+    ///   - layers: Layer ids in drawing order.
+    ///   - rawResponse: The complete response, for diagnostics; defaults to empty.
     public init(
         id: String,
         slot: String,

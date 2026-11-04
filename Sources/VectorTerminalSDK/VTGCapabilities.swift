@@ -16,6 +16,9 @@ public enum VTGTextPlaneStatus: Equatable {
 
     /// Parses an advertised text-plane value, preserving unrecognized ones
     /// so a newer terminal stays observable to an older SDK build.
+    ///
+    /// - Parameter rawValue: The advertised `textPlane` value, matched without regard to case.
+    ///     Unrecognized values become `.other` (lowercased); nil becomes `.other("")`.
     public init(_ rawValue: String?) {
         switch rawValue?.lowercased() {
         case "reserved":
@@ -122,6 +125,30 @@ public struct VTGCapabilities: Equatable {
 
     /// Creates a capability set. Every field defaults to unadvertised, which
     /// is what an absent response means.
+    ///
+    /// - Parameters:
+    ///   - protocolName: Protocol name, normally `VTG`.
+    ///   - schema: Capability schema identifier, such as `vtg.capabilities.v1`.
+    ///   - version: VTG protocol implementation version.
+    ///   - renderer: Renderer backend name.
+    ///   - canvas: Pixel canvas size embedded in the response.
+    ///   - commands: Command names implemented by the terminal.
+    ///   - planned: Command names planned but not yet implemented.
+    ///   - primitives: Primitive categories the retained scene supports.
+    ///   - underTextPrimitives: Primitive categories that render on layer `-1`.
+    ///   - formats: Raster image payload formats accepted.
+    ///   - raster: Raster image feature tokens.
+    ///   - sprites: Sprite feature tokens.
+    ///   - layers: Supported layer range as text, such as `-1-4`.
+    ///   - defaultLayer: Default drawing layer.
+    ///   - textPlane: Raw text-plane status for layer `0`, such as `reserved`.
+    ///   - layerScroll: Whether layer scrolling is advertised; nil when not stated.
+    ///   - layerAlpha: Layer-alpha support descriptor, typically `1-4`.
+    ///   - clip: Layer clipping support descriptor.
+    ///   - hit: Hit-region support descriptor.
+    ///   - events: Event categories the terminal reports.
+    ///   - colors: Color formats accepted by drawing commands.
+    ///   - rawResponse: The raw capabilities response; required.
     public init(
         protocolName: String? = nil,
         schema: String? = nil,

@@ -34,6 +34,16 @@ public struct VectorTerminalSessionOptions: Equatable {
     /// Creates an option set, defaulting to the full-screen demo behavior
     /// described above: alternate screen and hidden cursor on, mouse and raw
     /// input off.
+    ///
+    /// - Parameters:
+    ///   - useAlternateScreen: Enter the alternate screen on start and leave it on end. Defaults to `true`.
+    ///   - hideCursor: Hide the text cursor on start and show it on end. Defaults to `true`.
+    ///   - clearOnStart: Clear ANSI text and retained VTG graphics on start. Defaults to `true`.
+    ///   - clearOnEnd: Clear ANSI text and retained VTG graphics on end. Defaults to `false`.
+    ///   - resetTextAttributesOnEnd: Reset SGR text attributes on end. Defaults to `true`.
+    ///   - resizeEvents: Subscribe to VTG resize events while active. Defaults to `true`.
+    ///   - mouseMode: VTG mouse mode to enable while active, such as `raw`, or nil for none.
+    ///   - rawInput: Put stdin into raw mode while active. Defaults to `false`.
     public init(
         useAlternateScreen: Bool = true,
         hideCursor: Bool = true,

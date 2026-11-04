@@ -17,6 +17,13 @@ public struct VTGCommandRejection: Equatable {
     /// True when the terminal refused it; false when the SDK refused to send it.
     public var fromTerminal: Bool
 
+    /// A refused command, as the terminal or the SDK reports it.
+    ///
+    /// - Parameters:
+    ///   - command: The VTG command refused, such as `spriteUpload` or `sprite`.
+    ///   - id: The id the command named.
+    ///   - reason: Why, such as `badId`, `limit` or `unknownAsset`.
+    ///   - fromTerminal: `true` when the terminal refused it, `false` when the SDK refused to send it.
     public init(command: String, id: String, reason: String, fromTerminal: Bool) {
         self.command = command
         self.id = id

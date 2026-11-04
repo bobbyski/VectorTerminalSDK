@@ -18,6 +18,12 @@ public struct VTGCanvas: Equatable {
     ///
     /// `source` and `rawResponse` are diagnostic only; they are absent when
     /// the size came from somewhere that did not record them.
+    ///
+    /// - Parameters:
+    ///   - width: Canvas width, in VTG pixels.
+    ///   - height: Canvas height, in VTG pixels.
+    ///   - source: The query or event that produced the size, or nil when unknown.
+    ///   - rawResponse: The raw VTG response it was parsed from, or nil when not captured.
     public init(width: Int, height: Int, source: String? = nil, rawResponse: String? = nil) {
         self.width = width
         self.height = height
@@ -51,6 +57,12 @@ public struct TerminalCellSize: Equatable {
     public var pixelHeight: Int?
 
     /// A terminal size in cells, with pixel dimensions when the host reports them.
+    ///
+    /// - Parameters:
+    ///   - columns: Visible text columns.
+    ///   - rows: Visible text rows.
+    ///   - pixelWidth: Terminal width in pixels, or nil when the host does not report it.
+    ///   - pixelHeight: Terminal height in pixels, or nil when the host does not report it.
     public init(columns: Int, rows: Int, pixelWidth: Int? = nil, pixelHeight: Int? = nil) {
         self.columns = columns
         self.rows = rows
@@ -71,6 +83,10 @@ public struct TerminalGlyphSize: Equatable {
     public var height: Double
 
     /// A glyph size in terminal pixels.
+    ///
+    /// - Parameters:
+    ///   - width: Cell width, in terminal pixels.
+    ///   - height: Cell height, in terminal pixels.
     public init(width: Double, height: Double) {
         self.width = width
         self.height = height
@@ -86,6 +102,10 @@ public struct TerminalCursorPosition: Equatable {
     public var column: Int
 
     /// A position at the given terminal row and column.
+    ///
+    /// - Parameters:
+    ///   - row: One-based terminal row.
+    ///   - column: One-based terminal column.
     public init(row: Int, column: Int) {
         self.row = row
         self.column = column
@@ -113,6 +133,14 @@ public struct VTGPillButtonLayout: Equatable {
     public var column: Int
 
     /// A pill's pixel rect together with the cell it is anchored to.
+    ///
+    /// - Parameters:
+    ///   - x: Left edge, in VTG pixels.
+    ///   - y: Top edge, in VTG pixels.
+    ///   - width: Width, in VTG pixels.
+    ///   - height: Height, in VTG pixels.
+    ///   - row: Terminal row the pill is anchored to.
+    ///   - column: Terminal column the pill is anchored to.
     public init(x: Int, y: Int, width: Int, height: Int, row: Int, column: Int) {
         self.x = x
         self.y = y
@@ -136,6 +164,10 @@ public struct VTGTextSize: Equatable {
     public var height: Int
 
     /// A text size in VTG pixels.
+    ///
+    /// - Parameters:
+    ///   - width: Horizontal advance, in VTG pixels.
+    ///   - height: Glyph height, in VTG pixels.
     public init(width: Int, height: Int) {
         self.width = width
         self.height = height
@@ -181,16 +213,25 @@ public enum VTGLayer {
     public static let advertisedRange = "\(underText)-\(overlay4)"
 
     /// Clamp arbitrary user input into the VTG layer range.
+    ///
+    /// - Parameter layer: Any layer number.
+    /// - Returns: `layer` limited to -1...4.
     public static func clamped(_ layer: Int) -> Int {
         min(supportedRange.upperBound, max(supportedRange.lowerBound, layer))
     }
 
     /// Return whether a layer is accepted by VTG drawing commands.
+    ///
+    /// - Parameter layer: The layer number to check.
+    /// - Returns: `true` when `layer` is in -1...4.
     public static func isSupported(_ layer: Int) -> Bool {
         supportedRange.contains(layer)
     }
 
     /// Return whether a layer can currently scroll independently.
+    ///
+    /// - Parameter layer: The layer number to check.
+    /// - Returns: `true` for the overlay layers 1...4.
     public static func isScrollable(_ layer: Int) -> Bool {
         overlayRange.contains(layer)
     }

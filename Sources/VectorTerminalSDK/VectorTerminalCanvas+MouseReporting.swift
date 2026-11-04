@@ -10,6 +10,12 @@ extension VectorTerminalCanvas {
     }
 
     /// Enable VTG-native mouse reporting with an explicit VTG mode.
+    ///
+    /// Sends `mouseEvents,enabled=1,mode=<mode>` and turns on the ANSI SGR
+    /// fallback (`ESC[?1000h`, `ESC[?1006h`), as `enableMouseReporting()` does.
+    ///
+    /// - Parameter mode: The VTG mouse mode, such as `raw`. It is sent as given
+    ///     (sanitized), not checked against the modes the terminal supports.
     public func enableMouseReporting(mode: String) {
         send("mouseEvents,enabled=1,mode=\(sanitizedPayload(mode))")
         writeANSI("\(esc)[?1000h")

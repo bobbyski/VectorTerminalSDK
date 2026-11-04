@@ -17,6 +17,10 @@ public final class VectorTerminalSession {
     private let inputDrainGraceMilliseconds = 80
 
     /// Creates a session for `canvas`. Nothing is applied until `start()`.
+    ///
+    /// - Parameters:
+    ///   - canvas: The canvas the session draws through.
+    ///   - options: Which terminal states `start()` applies and `end()` restores. Defaults to `.init()`.
     public init(
         canvas: VectorTerminalCanvas,
         options: VectorTerminalSessionOptions = .init()

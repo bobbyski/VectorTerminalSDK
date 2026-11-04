@@ -8,8 +8,19 @@ extension VectorTerminalCanvas {
     /// the label is written as ordinary terminal text. No SDK vector text is
     /// emitted.
     ///
+    /// - Parameters:
+    ///   - id: The base id; the pill is `<id>-pill` and the hit region `<id>-hit`.
+    ///   - text: The label, written as terminal text. Empty text draws nothing.
+    ///   - glyphSize: The terminal cell size, in pixels, or `nil` to query it.
+    ///   - fill: Pill fill color.
+    ///   - stroke: Pill outline color, or `nil` for no outline.
+    ///   - lineWidth: Outline width, in pixels; at least 1.
+    ///   - layer: The target layer; under the text by default.
+    ///   - target: A hit-region target name, or `nil` for no hit region.
+    ///   - timeoutMilliseconds: How long each cursor or glyph-size query waits.
     /// - Returns: The pixel-space rectangle used for the pill, or nil if the
     ///   cursor position or terminal glyph size could not be determined.
+    ///   Also nil, with nothing drawn, when `id` is invalid or `text` is empty.
     @discardableResult
     public func pillButton(
         id: String,

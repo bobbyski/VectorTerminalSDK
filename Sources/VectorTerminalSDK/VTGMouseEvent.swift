@@ -55,6 +55,7 @@ public struct VTGMouseEvent: Equatable {
 
     /// Pointer position in that page's own coordinates, scroll included.
     public var pageX: Int?
+    /// Pointer y in that page's own coordinates, scroll included.
     public var pageY: Int?
 
     /// The page layer whose hit region matched, when one did.
@@ -65,6 +66,29 @@ public struct VTGMouseEvent: Equatable {
 
     /// Creates a mouse event. The optional fields stay nil when the terminal
     /// did not report them, which is how a caller tells "absent" from zero.
+    ///
+    /// - Parameters:
+    ///   - x: Pointer x, in VTG pixels.
+    ///   - y: Pointer y, in VTG pixels.
+    ///   - isPress: `true` for a press-style event, `false` for a release-style one.
+    ///   - button: Button number reported by the terminal. Defaults to 0.
+    ///   - cellX: One-based cell column, or nil when not reported.
+    ///   - cellY: One-based cell row, or nil when not reported.
+    ///   - type: Event type, such as `down`, `up`, `click`, `drag` or `scroll`;
+    ///     nil becomes `down` or `up` from `isPress`.
+    ///   - modifiers: Modifier summary, such as `none` or `shift|ctrl`. Defaults to `none`.
+    ///   - scrollX: Horizontal scroll delta, or nil when not reported.
+    ///   - scrollY: Vertical scroll delta, or nil when not reported.
+    ///   - hitID: Hit-region id the terminal matched, or nil.
+    ///   - targetID: App-facing target id of that hit region, or nil.
+    ///   - viewportLayer: Fixed-viewport layer used for the virtual coordinates, or nil.
+    ///   - virtualX: Pointer x in fixed-viewport virtual space, or nil.
+    ///   - virtualY: Pointer y in fixed-viewport virtual space, or nil.
+    ///   - pageID: The visible VTG page under the pointer, or nil.
+    ///   - pageX: Pointer x in the page's own coordinates, or nil.
+    ///   - pageY: Pointer y in the page's own coordinates, or nil.
+    ///   - pageLayer: The page layer whose hit region matched, or nil.
+    ///   - rawSequence: The raw VTG or ANSI sequence, for logs. Defaults to empty.
     public init(
         x: Int,
         y: Int,

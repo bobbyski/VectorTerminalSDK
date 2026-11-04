@@ -17,6 +17,9 @@ extension VectorTerminalCanvas {
     ///
     /// This is useful for small immediate-mode animations that need to remove
     /// objects that have moved fully offscreen without clearing the whole scene.
+    ///
+    /// - Parameter id: The retained primitive id. An invalid id sends nothing.
+    ///   The canvas also forgets any child ids it tracked for that id.
     public func delete(id: String) {
         guard isValidVTGIdentifier(id) else {
             return

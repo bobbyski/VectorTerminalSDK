@@ -57,6 +57,15 @@ public final class VectorTerminalCanvas: VectorTerminalSDKProtocol {
     }
 
     /// Create a graphics-enabled VTG canvas after verifying terminal support.
+    ///
+    /// Sends `capabilities?` (in raw mode) and throws
+    /// ``VectorTerminalSDKError/vectorTerminalNotDetected`` when no VTG
+    /// capabilities reply arrives in time.
+    ///
+    /// - Parameters:
+    ///   - input: Where terminal replies and events are read. Defaults to standard input.
+    ///   - output: Where VTG and ANSI bytes are written. Defaults to standard output.
+    ///   - timeoutMilliseconds: How long to wait for the capabilities reply. Defaults to 750.
     public init(
         input: FileHandle = .standardInput,
         output: VTGOutput = FileHandle.standardOutput,
@@ -75,6 +84,11 @@ public final class VectorTerminalCanvas: VectorTerminalSDKProtocol {
     /// Create a canvas object whose VTG drawing commands are ignored.
     ///
     /// ANSI helper methods still write to `output`; only VTG graphics are gated.
+    ///
+    /// - Parameters:
+    ///   - input: Where terminal replies and events are read. Defaults to standard input.
+    ///   - output: Where ANSI bytes are written. Defaults to standard output.
+    /// - Returns: A canvas that sends no VTG commands.
     public static func noOp(
         input: FileHandle = .standardInput,
         output: VTGOutput = FileHandle.standardOutput
@@ -88,6 +102,13 @@ public final class VectorTerminalCanvas: VectorTerminalSDKProtocol {
     /// Use this for in-process hosts where there is no stdout/stdin handshake
     /// path. Process-hosted apps should continue using the throwing initializer
     /// so traditional terminals do not see VTG drawing sequences.
+    ///
+    /// No capabilities query is made.
+    ///
+    /// - Parameters:
+    ///   - input: Where terminal replies and events are read. Defaults to standard input.
+    ///   - output: Where VTG and ANSI bytes are written, usually a ``ClosureVTGOutput``.
+    /// - Returns: A canvas with VTG commands enabled.
     public static func hostValidated(
         input: FileHandle = .standardInput,
         output: VTGOutput

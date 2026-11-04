@@ -3,6 +3,14 @@ import Foundation
 /// Immediate-mode VTG point and line commands.
 extension VectorTerminalCanvas {
     /// Draw or replace a single pixel.
+    ///
+    /// - Parameters:
+    ///   - id: The retained primitive id; drawing again with the same id replaces it.
+    ///   - x: X coordinate in pixels.
+    ///   - y: Y coordinate in pixels.
+    ///   - color: Pixel color.
+    ///   - layer: Graphics layer, `-1...4`. Nil, or an unsupported value, omits
+    ///     `layer=` so the primitive lands on the default layer.
     public func pixel(
         id: String,
         x: Int,
@@ -14,6 +22,18 @@ extension VectorTerminalCanvas {
     }
 
     /// Draw or replace a line segment.
+    ///
+    /// - Parameters:
+    ///   - id: The retained primitive id; drawing again with the same id replaces it.
+    ///   - x1: Start x, in pixels.
+    ///   - y1: Start y, in pixels.
+    ///   - x2: End x, in pixels.
+    ///   - y2: End y, in pixels.
+    ///   - stroke: Line color.
+    ///   - width: Line width in pixels.
+    ///   - lineCap: Stroke end style; nil keeps the renderer's default.
+    ///   - layer: Graphics layer, `-1...4`. Nil, or an unsupported value, omits
+    ///     `layer=` so the primitive lands on the default layer.
     public func line(
         id: String,
         x1: Int,

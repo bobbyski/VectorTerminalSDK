@@ -3,6 +3,11 @@ import Foundation
 /// ANSI terminal-mode helpers.
 extension VectorTerminalCanvas {
     /// Run synchronous work while stdin is in raw mode.
+    ///
+    /// The previous mode is restored when `body` returns or throws.
+    ///
+    /// - Parameter body: The work to run.
+    /// - Returns: Whatever `body` returns.
     public func withRawInput<T>(_ body: () throws -> T) rethrows -> T {
         let original = enableRawMode()
         defer { restoreMode(original) }
@@ -10,6 +15,11 @@ extension VectorTerminalCanvas {
     }
 
     /// Run asynchronous work while stdin is in raw mode.
+    ///
+    /// The previous mode is restored when `body` returns or throws.
+    ///
+    /// - Parameter body: The asynchronous work to run.
+    /// - Returns: Whatever `body` returns.
     public func withRawInput<T>(_ body: () async throws -> T) async rethrows -> T {
         let original = enableRawMode()
         defer { restoreMode(original) }

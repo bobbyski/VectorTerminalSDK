@@ -13,6 +13,11 @@ extension VectorTerminalCanvas {
     }
 
     /// Instance convenience wrapper for `VectorTerminalCanvas.ledTextSize(...)`.
+    ///
+    /// - Parameters:
+    ///   - height: The requested glyph height, in pixels; heights under 16 measure as 16.
+    ///   - value: The text to measure; every Unicode scalar counts as one advance.
+    /// - Returns: The advance width and effective glyph height, in pixels.
     public nonisolated func ledTextSize(height: Int, value: String) -> VTGTextSize {
         Self.ledTextSize(height: height, value: value)
     }
@@ -22,6 +27,22 @@ extension VectorTerminalCanvas {
     /// Each lit segment is emitted as a retained filled VTG path. Set
     /// `inactiveColor` to draw the unlit segments too, which creates a dim
     /// display-glass effect. Leave it nil for only the visible LED letters.
+    ///
+    /// Each segment is a retained `path` primitive with the id
+    /// `<id>-<glyph>-<segment>`. Primitives from the last call with the same
+    /// `id` are deleted first.
+    ///
+    /// - Parameters:
+    ///   - id: The base id for the emitted primitives.
+    ///   - x: Left edge of the first glyph, in pixels.
+    ///   - y: Top edge of the glyphs, in pixels.
+    ///   - height: Glyph height, in pixels; heights under 16 draw as 16.
+    ///   - value: The text to draw; uppercase letters, digits, space and some punctuation.
+    ///   - color: Fill color of lit segments.
+    ///   - inactiveColor: Fill color of unlit segments, or `nil` to skip them.
+    ///   - stroke: Outline color of each segment, or `nil` for no outline.
+    ///   - lineWidth: Outline width, in pixels.
+    ///   - layer: The target layer, or `nil` for the default layer.
     public func ledPrint(
         id: String,
         x: Int,
@@ -77,11 +98,15 @@ extension VectorTerminalCanvas {
 
     /// Delete all retained primitives emitted by the last `ledPrint(...)`
     /// call with this base id.
+    ///
+    /// - Parameter id: The base id passed to `ledPrint(...)`.
     public func deleteLEDText(id: String) {
         deleteStringObjects(id: id)
     }
 
     /// Alias for callers that think of segmented LED text as LCD text.
+    ///
+    /// - Parameter id: The base id passed to `ledPrint(...)`.
     public func deleteLCDText(id: String) {
         deleteLEDText(id: id)
     }

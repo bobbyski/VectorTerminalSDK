@@ -6,6 +6,11 @@ extension VectorTerminalCanvas {
     /// VectorTank uses this to drain all currently available input each frame.
     /// A zero timeout means "do not block"; a positive timeout waits for input
     /// up to that many milliseconds.
+    ///
+    /// - Parameter timeoutMilliseconds: How long to wait for input. Defaults to 0 (do not block);
+    ///     zero or negative never blocks.
+    /// - Returns: The next event, or nil when no input arrives in time, the read fails, or an
+    ///     escape sequence stays incomplete (its bytes are dropped).
     public func readEvent(timeoutMilliseconds: Int = 0) -> VectorTerminalEvent? {
         var reader = TerminalInputReader(input)
         let deadline = Date().addingTimeInterval(Double(timeoutMilliseconds) / 1000)

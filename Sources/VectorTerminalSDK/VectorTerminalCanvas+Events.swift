@@ -5,6 +5,13 @@ extension VectorTerminalCanvas {
     ///
     /// The stream periodically sends a capabilities query so apps that cannot
     /// rely on resize push events still learn about canvas changes.
+    ///
+    /// Reading runs on a detached task that stops when the stream is canceled
+    /// or dropped. It does not change the terminal mode; enter raw mode first.
+    ///
+    /// - Parameter canvasPollInterval: Seconds between `capabilities?` queries while input is idle.
+    ///     Defaults to 0.5.
+    /// - Returns: A stream of terminal events that runs until it is canceled.
     public func events(canvasPollInterval: TimeInterval = 0.5) -> AsyncStream<VectorTerminalEvent> {
         AsyncStream { continuation in
             let input = TerminalInputReader(input)

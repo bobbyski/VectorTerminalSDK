@@ -7,10 +7,13 @@ import Foundation
 /// and macOS repeats only the newest key — so a game holding an arrow cannot
 /// tell it is still held once another key is pressed. These say.
 public struct VTGKeyEvent: Equatable {
+    /// What happened to the key, from the message's `type` field.
     public enum Kind: String {
+        /// The key went down (`down`), the key came up (`up`), or the key auto-repeated while held (`repeat`).
         case down, up, `repeat`
     }
 
+    /// Whether the key went down, came up, or repeated.
     public var kind: Kind
     /// `LEFT`, `SPACE`, `SHIFT`, `F5`…, or `CHAR` for a key that types.
     public var key: String
@@ -24,8 +27,20 @@ public struct VTGKeyEvent: Equatable {
     public var modifiers: String
     /// Released because the terminal lost focus.
     public var lostFocus: Bool
+    /// The raw `key` message this event was parsed from.
     public var rawResponse: String
 
+    /// A key event, as the SDK builds it from a terminal `key` message.
+    ///
+    /// - Parameters:
+    ///   - kind: Whether the key went down, came up, or repeated.
+    ///   - key: The key name, such as `LEFT`, `SPACE`, `SHIFT` or `F5`, or `CHAR` for a key that types.
+    ///   - character: For `CHAR`, the character the key types unshifted; nil otherwise.
+    ///   - text: On `down`, the character this press typed when it differs; nil otherwise.
+    ///   - side: `left` or `right` for a modifier key; nil otherwise.
+    ///   - modifiers: `none`, or `shift`/`ctrl`/`alt`/`cmd` joined by `|`. Defaults to `none`.
+    ///   - lostFocus: `true` when the key was released because the terminal lost focus.
+    ///   - rawResponse: The raw `key` message, for logs. Defaults to empty.
     public init(
         kind: Kind,
         key: String,
@@ -52,6 +67,10 @@ extension VectorTerminalCanvas {
     /// Ask the terminal to report each key going down and coming up — and,
     /// with `repeats`, the auto-repeats in between. Check the capabilities for
     /// `keyEvents` first: a terminal without it sends nothing.
+    ///
+    /// Sends `keyEvents,enabled=1`, adding `repeat=1` when `repeats` is set.
+    ///
+    /// - Parameter repeats: Also report auto-repeats while a key is held. Defaults to `false`.
     public func enableKeyEvents(repeats: Bool = false) {
         send("keyEvents,enabled=1" + (repeats ? ",repeat=1" : ""))
     }

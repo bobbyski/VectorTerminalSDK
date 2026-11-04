@@ -11,31 +11,49 @@ import Musl
 /// ANSI cursor movement and visibility helpers.
 extension VectorTerminalCanvas {
     /// Move the cursor using one-based terminal row and column coordinates.
+    ///
+    /// Sends ANSI CUP (`ESC[row;columnH`). Values below 1 are raised to 1.
+    ///
+    /// - Parameters:
+    ///   - row: One-based terminal row.
+    ///   - column: One-based terminal column.
     public func moveCursor(row: Int, column: Int) {
         writeANSI("\(esc)[\(max(1, row));\(max(1, column))H")
     }
 
     /// Alias for `moveCursor(row:column:)`.
+    ///
+    /// - Parameters:
+    ///   - row: One-based terminal row; values below 1 become 1.
+    ///   - column: One-based terminal column; values below 1 become 1.
     public func setCursor(row: Int, column: Int) {
         moveCursor(row: row, column: column)
     }
 
     /// Move the cursor up by `count` cells.
+    ///
+    /// - Parameter count: Cells to move. Defaults to 1; values below 1 become 1.
     public func moveCursorUp(_ count: Int = 1) {
         writeANSI("\(esc)[\(max(1, count))A")
     }
 
     /// Move the cursor down by `count` cells.
+    ///
+    /// - Parameter count: Cells to move. Defaults to 1; values below 1 become 1.
     public func moveCursorDown(_ count: Int = 1) {
         writeANSI("\(esc)[\(max(1, count))B")
     }
 
     /// Move the cursor right by `count` cells.
+    ///
+    /// - Parameter count: Cells to move. Defaults to 1; values below 1 become 1.
     public func moveCursorForward(_ count: Int = 1) {
         writeANSI("\(esc)[\(max(1, count))C")
     }
 
     /// Move the cursor left by `count` cells.
+    ///
+    /// - Parameter count: Cells to move. Defaults to 1; values below 1 become 1.
     public func moveCursorBackward(_ count: Int = 1) {
         writeANSI("\(esc)[\(max(1, count))D")
     }
@@ -61,6 +79,12 @@ extension VectorTerminalCanvas {
     }
 
     /// Query the current terminal cursor position using ANSI DSR.
+    ///
+    /// Switches the input to raw mode for the query, sends `ESC[6n`, and reads
+    /// the `ESC[row;columnR` reply.
+    ///
+    /// - Parameter timeoutMilliseconds: How long to wait for the reply. Defaults to 750.
+    /// - Returns: The one-based cursor position, or nil when no valid reply arrives in time.
     public func queryCursorPosition(timeoutMilliseconds: Int = 750) -> TerminalCursorPosition? {
         let original = enableRawMode()
         defer { restoreMode(original) }

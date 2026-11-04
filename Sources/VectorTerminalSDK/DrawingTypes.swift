@@ -9,11 +9,15 @@ public struct VTGColor: Equatable, ExpressibleByStringLiteral {
     public var rawValue: String
 
     /// Wraps a wire-format value such as `#RRGGBB`, `#RRGGBBAA`, or `none`.
+    ///
+    /// - Parameter rawValue: The color token, sent to the terminal unchanged.
     public init(_ rawValue: String) {
         self.rawValue = rawValue
     }
 
     /// Lets a color be written as a bare string literal at a call site.
+    ///
+    /// - Parameter value: The literal's text, used as the wire-format color token.
     public init(stringLiteral value: String) {
         self.rawValue = value
     }
@@ -41,6 +45,10 @@ public struct VTGPoint: Equatable {
     public var y: Int
 
     /// A point at the given VTG pixel coordinates.
+    ///
+    /// - Parameters:
+    ///   - x: X coordinate in pixels.
+    ///   - y: Y coordinate in pixels.
     public init(x: Int, y: Int) {
         self.x = x
         self.y = y

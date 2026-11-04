@@ -3,11 +3,19 @@ import Foundation
 /// VTG query convenience APIs.
 extension VectorTerminalCanvas {
     /// Return the raw VTG capabilities response, if the host answers.
+    ///
+    /// Sends `capabilities?` and waits for one APC reply.
+    ///
+    /// - Parameter timeoutMilliseconds: How long to wait for the reply. Defaults to 750.
+    /// - Returns: The raw reply text, or nil when nothing arrives in time.
     public func queryCapabilities(timeoutMilliseconds: Int = 750) -> String? {
         query("capabilities?", timeoutMilliseconds: timeoutMilliseconds)
     }
 
     /// Return a parsed VTG capabilities response, if the host answers.
+    ///
+    /// - Parameter timeoutMilliseconds: How long to wait for the reply. Defaults to 750.
+    /// - Returns: The parsed capabilities, or nil when nothing arrives in time or the reply does not parse.
     public func queryCapabilityInfo(timeoutMilliseconds: Int = 750) -> VTGCapabilities? {
         guard let response = queryCapabilities(timeoutMilliseconds: timeoutMilliseconds) else {
             return nil
@@ -16,6 +24,9 @@ extension VectorTerminalCanvas {
     }
 
     /// Query the current VTG pixel canvas size with the direct `canvas?` command.
+    ///
+    /// - Parameter timeoutMilliseconds: How long to wait for the reply. Defaults to 750.
+    /// - Returns: The canvas size in VTG pixels, or nil when nothing arrives in time or the reply lacks a width and height.
     public func queryCanvas(timeoutMilliseconds: Int = 750) -> VTGCanvas? {
         guard let response = query("canvas?", timeoutMilliseconds: timeoutMilliseconds) else {
             return nil
@@ -28,6 +39,9 @@ extension VectorTerminalCanvas {
     /// Prefer `queryCanvas(...)` or `queryCurrentCanvas(...)` for new code.
     /// This one-to-one wrapper exists for compatibility, diagnostics, and
     /// escape-sequence coverage audits.
+    ///
+    /// - Parameter timeoutMilliseconds: How long to wait for the reply. Defaults to 750.
+    /// - Returns: The canvas size in VTG pixels, or nil when nothing arrives in time or the reply lacks a width and height.
     public func querySize(timeoutMilliseconds: Int = 750) -> VTGCanvas? {
         guard let response = query("size?", timeoutMilliseconds: timeoutMilliseconds) else {
             return nil
@@ -41,6 +55,10 @@ extension VectorTerminalCanvas {
     /// VTG query a terminal version supports. Prefer `canvas?`, fall back to
     /// `size?`, then fall back to the canvas fields embedded in
     /// `capabilities?`.
+    ///
+    /// - Parameter timeoutMilliseconds: How long to wait for each query's reply. Defaults to 750;
+    ///     a terminal that answers none of them can take three times this long.
+    /// - Returns: The canvas size in VTG pixels, or nil when no query gives one.
     public func queryCurrentCanvas(timeoutMilliseconds: Int = 750) -> VTGCanvas? {
         if let canvas = queryCanvas(timeoutMilliseconds: timeoutMilliseconds) {
             return canvas
@@ -56,6 +74,11 @@ extension VectorTerminalCanvas {
     }
 
     /// Query whether the host is currently rendering retained graphics layers.
+    ///
+    /// Sends `graphicsVisible?`.
+    ///
+    /// - Parameter timeoutMilliseconds: How long to wait for the reply. Defaults to 750.
+    /// - Returns: Whether the layers are visible, or nil when nothing arrives in time or the reply does not parse.
     public func areGraphicsLayersVisible(timeoutMilliseconds: Int = 750) -> Bool? {
         guard let response = query("graphicsVisible?", timeoutMilliseconds: timeoutMilliseconds) else {
             return nil
@@ -64,6 +87,11 @@ extension VectorTerminalCanvas {
     }
 
     /// Query the terminal glyph cell size for a normal-width character.
+    ///
+    /// Sends `glyphSize?`.
+    ///
+    /// - Parameter timeoutMilliseconds: How long to wait for the reply. Defaults to 750.
+    /// - Returns: The cell size in terminal pixels, or nil when nothing arrives in time or the reply does not parse.
     public func queryTerminalGlyphSize(timeoutMilliseconds: Int = 750) -> TerminalGlyphSize? {
         guard let response = query("glyphSize?", timeoutMilliseconds: timeoutMilliseconds) else {
             return nil
