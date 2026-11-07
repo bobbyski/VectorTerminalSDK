@@ -23,6 +23,16 @@ import Foundation
 /// into the text plane and forgets them. That is what makes this usable from an
 /// existing program: turn it on, draw as before, turn it off.
 ///
+/// **What the plain mode really does (WINDOW_PLAN.md, Findings A and B).** Plain
+/// `enterRasterMode()` gives each drawing a fresh id and draws it on layer 0,
+/// which terminals draw *over* the text, and keeps it until a clear. So text
+/// written later does not hide the drawing, and a program that plots every frame
+/// builds an ever-longer list. That behavior is kept exactly, for programs that
+/// rely on it. `enterRasterMode(textErases: true)` asks for the framebuffer the
+/// diagram above describes: text written over a drawing erases it cell by cell,
+/// drawing scrolls with the text, and nothing is retained. Check
+/// ``VTGCapabilities/rasterTextErases`` first.
+///
 /// What an application gives up while it is on:
 ///
 /// - `delete(id:)` has nothing to delete, and redrawing an id paints again
@@ -36,8 +46,14 @@ import Foundation
 /// that can no longer be addressed.
 extension VectorTerminalCanvas {
     /// Turn raster mode on: drawing paints into the text plane and is not retained.
-    public func enterRasterMode() {
-        setRasterMode(true)
+    ///
+    /// - Parameter textErases: Ask for real framebuffer behavior: text written
+    ///   over a drawing erases it, cell by cell, and drawing scrolls with the
+    ///   text. Sends `text=erases`; check ``VTGCapabilities/rasterTextErases``
+    ///   first, since an older terminal ignores the option and keeps drawing
+    ///   above the text. Defaults to false, which is raster mode as it was.
+    public func enterRasterMode(textErases: Bool = false) {
+        setRasterMode(true, textErases: textErases)
     }
 
     /// Turn raster mode off and return to the retained scene.
@@ -50,13 +66,16 @@ extension VectorTerminalCanvas {
     /// Sends `rasterMode,enabled=1` or `0` and forgets tracked ids. Asking for
     /// the mode the canvas is already in sends nothing.
     ///
-    /// - Parameter enabled: True to turn raster mode on, false to turn it off.
-    public func setRasterMode(_ enabled: Bool) {
+    /// - Parameters:
+    ///   - enabled: True to turn raster mode on, false to turn it off.
+    ///   - textErases: With `enabled`, ask that text erase the drawing under it
+    ///     (`text=erases`). Ignored when turning raster mode off.
+    public func setRasterMode(_ enabled: Bool, textErases: Bool = false) {
         guard enabled != isRasterMode else {
             return
         }
         isRasterMode = enabled
-        send("rasterMode,enabled=\(enabled ? 1 : 0)")
+        send("rasterMode,enabled=\(enabled ? 1 : 0)" + (enabled && textErases ? ",text=erases" : ""))
         // The terminal clears its scene on the switch; the ids this canvas is
         // still tracking refer to objects that no longer exist either way.
         retainedStringObjectIDs.removeAll()

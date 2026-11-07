@@ -45,6 +45,10 @@ extension VectorTerminalCanvas {
                 pageEventHandler?(VTGPageEvent(name: name, fields: vtgFields(from: response), rawResponse: response))
                 return nil
             }
+            if VTGWindowEvent.isWindowEventName(name) {
+                windowEventHandler?(VTGWindowEvent(name: name, fields: vtgFields(from: response), rawResponse: response))
+                return nil
+            }
             if dispatchCommandRejected(name, response: response) {
                 return nil
             }

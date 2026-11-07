@@ -36,6 +36,12 @@ public final class VectorTerminalCanvas: VectorTerminalSDKProtocol {
     /// events, or the one that sent the command.
     public var commandRejectedHandler: ((VTGCommandRejection) -> Void)?
 
+    /// Told about VTG windows: clicks on a window's frame (after
+    /// ``enableWindowEvents()``), `windows?` answers, and refused window
+    /// commands. A separate channel, like ``pageEventHandler``, so no existing
+    /// `switch` over events breaks. Called on the thread that reads events.
+    public var windowEventHandler: ((VTGWindowEvent) -> Void)?
+
     /// Told each key going down and coming up, once ``enableKeyEvents(repeats:)``
     /// has asked a terminal that supports it. A separate channel, like
     /// ``pageEventHandler``, so no existing `switch` over events breaks.
